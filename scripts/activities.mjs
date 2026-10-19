@@ -47,7 +47,7 @@ export function makeActivityBundle(ability){
    roll:{prompt:false}
  };
  const actions={affinityActivate:primary};
- const safeAttack=isImmediateAttack(desc)&&parts.length===1&&!saveInDescription(desc);
+ const safeAttack=isImmediateAttack(desc)&&parts.length>=1&&!saveInDescription(desc);
  if(safeAttack){
   const m=cleaned(desc).match(/\b(Ranged|Melee)\s+(Weapon|Spell)\s+Attack\b/i);
   if(m){
@@ -61,6 +61,11 @@ export function makeActivityBundle(ability){
  }
  // Additional die rolls are explicitly optional; do not apply delayed damage
  // (e.g. marked targets, poison-over-time, and trigger reactions) immediately.
+ if(safeAttack&&parts.length>1){
+   actions.affinityExtraDamage={_id:'affinityExtraDamage',type:'damage',name:'Conditional Bonus Damage (GM adjudicates)',
+    activation:{type:'',cost:1,override:true},
+    damage:{parts:[parts[1]]},consumption:{targets:[],spellSlot:false}};
+ }
  if(!safeAttack&&parts.length===1){
    actions.affinityDamage={_id:"affinityDamage",type:"damage",name:"Roll Damage (GM adjudicates trigger)",
     activation:{type:"",cost:1,override:true},
