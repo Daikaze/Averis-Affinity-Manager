@@ -1,7 +1,7 @@
 import {AFFINITIES,AFFINITY_MAP} from './catalog.mjs';
 import {redactDC} from './redact.mjs';
-import {syncActorFeatures} from './features.mjs';
-import {MODULE_ID,DC_BY_LEVEL,CHECKS,MAX_NORMAL,normalizeState,emptyState,grantAffinity,gmSetLevel,removeAffinity,nextCheck,attemptCheck,useAbility,longRest,maxUses,knownCount,clearTrainingCooldown} from './engine.mjs';
+import {syncActorFeatures,getOwnedFeatureIdentity} from './features.mjs';
+import {MODULE_ID,DC_BY_LEVEL,CHECKS,MAX_NORMAL,normalizeState,emptyState,grantAffinity,gmSetLevel,removeAffinity,nextCheck,attemptCheck,useAbility,longRest,maxUses,knownCount,clearTrainingCooldown,suppressFeature} from './engine.mjs';
 
 const SOCKET=`module.${MODULE_ID}`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -33,13 +33,13 @@ function safeInput(raw){if(!raw)return null;if(raw instanceof FormData)return Ob
 function actorById(id){const a=game.actors?.get?.(id);return isActor(a)?a:null;}
 async function persist(a,newState){if(!a||!a.canUserModify?.(game.user,'update'))throw Error('You cannot update this Actor.');await a.setFlag(MODULE_ID,'progress',newState);}
 const syncing=new Set();
-async function reconcileFeatures(a,progress=profile(a),{notify=true}={}){
+async function reconcileFeatures(a,progress=profile(a),{notify=true,affinityId=null,restore=false}={}){
  if(!isGM())throw Error('Only the GM can sync Affinity Features.');
  if(!a)throw Error('Select a character first.');
  const key=a.uuid??a.id;
  if(syncing.has(key))return null;
  syncing.add(key);
- try{return await syncActorFeatures(a,progress);}
+ try{return await syncActorFeatures(a,progress,{affinityId,restore});}
  catch(error){
    console.error('[Affinity Manager] Feature sync failed for '+a.name,error);
    if(notify)warn('Affinity progression saved, but Character Sheet Features could not be synchronized. Use Sync Features in the GM panel.');
@@ -52,8 +52,7 @@ async function change(a,callback){
  try{
   const before=profile(a),newState=callback(before);
   await persist(a,newState);
-  // Only GMs can authoritatively create/delete module-owned Features.
-  if(isGM())await reconcileFeatures(a,newState);
+  // Mutating resources never re-adds Features. Unlocks/removals sync explicitly.
   if(dashboard?.rendered)await dashboard.render({force:true});
   return newState;
  } finally{wait.delete(a.uuid);}
@@ -108,7 +107,7 @@ async function markTeacher(id){
  if(!raw)return;const teacher=game.actors.get(raw.actorId);if(!teacher)throw Error('Creature not found.');
  const current=teacher.getFlag(MODULE_ID,'mastery')??{};await teacher.setFlag(MODULE_ID,'mastery',{...current,[id]:5});info(`${teacher.name} can teach ${AFFINITY_MAP[id].name}.`);
 }
-async function adjustLevel(a,id){if(!isGM())throw Error('GM only.');const raw=await input('GM · Adjust Affinity Level',`<p>Set Level 0–5 for <b>${esc(AFFINITY_MAP[id].name)}</b>. This is an override, not a training roll.</p><label>New level<input name="level" type="number" min="0" max="5" step="1" value="${profile(a).known[id]?.level??0}" required></label>`,'Set Level');if(!raw)return;const l=Number(raw.level);if(!Number.isInteger(l)||l<0||l>5)throw Error('Enter a valid Level between 0 and 5.');if(!await confirm('Confirm GM override',`Set ${esc(a.name)} — ${esc(AFFINITY_MAP[id].name)} to Level ${l}?`,'Confirm'))return;await change(a,s=>gmSetLevel(s,id,l));}
+async function adjustLevel(a,id){if(!isGM())throw Error('GM only.');const raw=await input('GM · Adjust Affinity Level',`<p>Set Level 0–5 for <b>${esc(AFFINITY_MAP[id].name)}</b>. This is an override, not a training roll.</p><label>New level<input name="level" type="number" min="0" max="5" step="1" value="${profile(a).known[id]?.level??0}" required></label>`,'Set Level');if(!raw)return;const l=Number(raw.level);if(!Number.isInteger(l)||l<0||l>5)throw Error('Enter a valid Level between 0 and 5.');if(!await confirm('Confirm GM override',`Set ${esc(a.name)} — ${esc(AFFINITY_MAP[id].name)} to Level ${l}?`,'Confirm'))return;await change(a,s=>gmSetLevel(s,id,l));await reconcileFeatures(a,profile(a),{affinityId:id});}
 async function resetTrainingCooldown(a,id){
  if(!isGM())throw Error('GM permission required.');
  if(!profile(a).known[id])throw Error('Grant this Affinity before clearing its cooldown.');
@@ -128,6 +127,7 @@ async function removeKnown(a,id){
   'Remove Affinity');
  if(!proceed)return false;
  await change(a,s=>removeAffinity(s,id));
+ await reconcileFeatures(a,profile(a),{affinityId:id});
  info(`${aff.name} Affinity removed from ${a.name}.`);
  return true;
 }
@@ -156,21 +156,37 @@ async function runCheck(a,id,manual=false){
  }
  const result=attemptCheck(profile(a),id,{check:next.check,total,worldTime:nowWorld(),failDays:game.settings.get(MODULE_ID,'failureDays'),successDays:game.settings.get(MODULE_ID,'successDays')});
  await change(a,()=>result.state);
+ if(result.levelUp)await reconcileFeatures(a,profile(a),{affinityId:id});
  const summary=`${a.name} · ${affinity.name}: ${name} ${result.pass?'SUCCEEDED':'FAILED'}${result.levelUp?` — Affinity Level ${result.newLevel} unlocked!`:''}`;
  // Public message must contain NO target DC or secret difficulty.
  await ChatMessage.create({speaker:ChatMessage.getSpeaker({actor:a}),content:`<div class="aam-chat"><b>Affinity Training</b><p>${esc(summary)}</p><small>${result.levelUp?'All 3 checks passed.':'Progress updated.'}</small></div>`});
  info(summary);
 }
+
+const using=new Set();
 async function activate(a,id,level){
- if(!ownership(a))throw Error('You do not own this character.');const aff=AFFINITY_MAP[id],ability=aff?.abilities?.find(s=>s.level===level);if(!ability)throw Error('Ability not found.');
- const limit=maxUses(ability,pb(a)),used=profile(a).usage[`${id}:${level}`]??0;
- if(limit!==null&&used>=limit)throw Error('No uses remaining until Long Rest.');
- const ok=await confirm(`Use ${ability.title}`,`<p>Use <b>${esc(ability.title)}</b>?</p><p>${limit===null?'This ability has no recorded finite use limit.':`Remaining uses: ${limit-used} / ${limit}. One use will be recorded.`}</p><p>Apply attacks, saves, effects and damage normally in D&D 5e.</p>`,'Use Ability');
- if(!ok)return;
- await change(a,s=>useAbility(s,id,level,pb(a)));
- // Plain description in chat never exposes any source save DC to non-GMs.
- await ChatMessage.create({speaker:ChatMessage.getSpeaker({actor:a}),content:`<div class="aam-chat"><h3>${esc(aff.name)} · ${esc(ability.title)}</h3>${markdown(ability.description,false)}<small>Track rolls and effects with regular D&D 5e activities. Uses are recorded by Affinity Manager.</small></div>`});
+ if(!ownership(a))throw Error('You do not own this character.');
+ const aff=AFFINITY_MAP[id],ability=aff?.abilities?.find(s=>s.level===level);
+ if(!ability||!profile(a).known[id]||profile(a).known[id].level<level)throw Error('Ability is not unlocked.');
+ const useKey=a.id+':'+id+':'+level;
+ if(using.has(useKey))throw Error('Ability use is already in progress.');
+ const limit=maxUses(ability,pb(a)),used=profile(a).usage[id+':'+level]??0;
+ if(limit!==null&&used>=limit)throw Error('No Long Rest uses remaining.');
+ const feat=(a.items?.contents??[]).find(i=>getOwnedFeatureIdentity(i)===id+':'+level);
+ if(!feat)throw Error('This Feature has been removed from the Character Sheet. GM can restore it explicitly using Restore Features.');
+ const activities=feat.system?.activities;
+ const activity=activities?.get?.('affinityStrike')??activities?.get?.('affinityActivate')
+  ??activities?.contents?.find?.(x=>x.id==='affinityStrike'||x.id==='affinityActivate')
+  ??Object.values(activities??{}).find(x=>x?._id==='affinityStrike'||x?._id==='affinityActivate');
+ if(typeof activity?.use!=='function')throw Error('This Feature has no D&D activity yet. Ask the GM to restore or upgrade its Feature.');
+ using.add(useKey);
+ try{
+  const result=await activity.use({}, {configure:true}, {});
+  if(result===false||result===null)return;
+  await change(a,state=>useAbility(state,id,level,pb(a)));
+ }finally{using.delete(useKey);}
 }
+
 async function quickDice(a,id,level,formula){
  if(!ownership(a))throw Error('Not your Actor.');const ab=AFFINITY_MAP[id]?.abilities[level-1];if(!ab||!profile(a).known[id]||profile(a).known[id].level<level||!ab.dice.includes(formula))throw Error('Dice not available for this unlocked ability.');
  const roll=await(new Roll(formula)).evaluate();await roll.toMessage({speaker:ChatMessage.getSpeaker({actor:a}),flavor:`${esc(ab.title)} · Optional dice (${esc(formula)}) — GM adjudicates`});
@@ -192,7 +208,7 @@ class AffinityDashboard extends foundry.applications.api.ApplicationV2{
   const progress=known?`<div class="aam-progress"><div class="aam-progress-track"><span style="width:${lv/5*100}%;background:${aff.color}"></span></div><div class="aam-prog-label">${lv}/5 levels unlocked · ${known.successes.length}/3 checks completed toward next level</div></div>`:'';
   const gmControls=gm&&actor?`<section class="aam-gm"><div class="aam-label"><i class="fas fa-crown"></i> GM CONTROL PANEL <span>PRIVATE DCs</span></div><div class="aam-gm-actions">${aff.unavailable?'<p>No source abilities supplied for this Affinity.</p>':known?`<button data-action="roll"><i class="fas fa-dice-d20"></i> Roll next check</button><button data-action="record">Record total</button><button data-action="set-level">Set level</button><button data-action="reset-cooldown" title="GM only: reset the training cooldown without deleting progress">Clear cooldown</button><button data-action="remove">Remove</button>`:`${aff.special?'':'<button data-action="grant-innate">Grant innate</button>'}${aff.special?'<button data-action="grant-special">Grant special</button>':'<button data-action="grant-teacher">Learn from teacher</button><button data-action="mark-teacher">Mark Lv5 teacher</button>'}`}</div>${known&&lv<5?`<div class="aam-gm-secret">Next: <b>${esc({con:'CON',arc:'Arcana',ins:'Insight'}[next?.check]??'Cooldown')}</b> · Target DC <b>${DC_BY_LEVEL[lv]}</b> · ${next?.reason?esc(next.reason):'Ready to check'}</div>`:''}</section>`:'';
   const playerCta=!gm&&actor&&!aff.unavailable?`<button type="button" class="aam-request" data-action="request"><i class="fas fa-paper-plane"></i> ${known?'Request upgrade training':'Request to learn Affinity'}</button>`:'';
-  const footer=`<footer class="aam-footer"><button type="button" data-action="long-rest"><i class="fas fa-bed"></i> Reset Affinity Uses (Long Rest)</button>${gm?'<button type="button" data-action="sync-features" title="Reconcile current Affinity levels with native D&D Features"><i class="fas fa-arrows-rotate"></i> Sync Features</button>':''}<span><i class="fas fa-shield-alt"></i> Powered by D&D 5e 5.3.3 · GM-approved progression</span><span>Ability effects are GM-adjudicated</span></footer>`;
+  const footer=`<footer class="aam-footer"><button type="button" data-action="long-rest"><i class="fas fa-bed"></i> Reset Affinity Uses (Long Rest)</button>${gm?'<button type="button" data-action="sync-features" title="Reconcile current Affinity levels with native D&D Features"><i class="fas fa-arrows-rotate"></i> Restore Features</button>':''}<span><i class="fas fa-shield-alt"></i> Powered by D&D 5e 5.3.3 · GM-approved progression</span><span>Ability effects are GM-adjudicated</span></footer>`;
   const history=state.history.slice(-35).reverse().map(e=>`<div class="aam-event"><span>${esc((AFFINITY_MAP[e.id]?.name??'Affinity'))}</span><b>${esc(e.type==='check'?`${{con:'CON',arc:'Arcana',ins:'Insight'}[e.check]??'Check'} ${e.pass?'Passed':'Failed'}`:e.type==='grant'?'Learned':e.type==='use'?e.ability:e.type==='long-rest'?'Long Rest':e.type==='cooldown-reset'?'Cooldown cleared':e.type==='gm-set'?'GM level set':e.type==='remove'?'Removed':e.type)}</b><small>${e.levelUp?'Level Up!':e.type==='check'?`Step for Lv ${e.level}`:e.source??''}</small></div>`).join('')||'<div class="aam-empty">No Affinity history yet.</div>';
   const content=aff.unavailable?`<div class="aam-empty"><h3>Thunder rules not supplied</h3><p>The provided Affinity document includes “Another Affinity” but no Thunder abilities. This tree is intentionally disabled to avoid inventing rules.</p></div>`:this.tab==='abilities'?`<div class="aam-cards">${abilityCards}</div>`:this.tab==='training'?`<div class="aam-info-card"><h3>Upgrade Path</h3><p>Each upgrade requires three successful checks in order: Constitution, Arcana and Insight.</p><p>Successful checks are saved, even when a later check fails. Retry waiting times are governed by world time.</p>${known?`<div class="aam-check-track">${CHECKS.map(c=>`<div class="${known.successes.includes(c)?'done':''}"><i class="fas ${known.successes.includes(c)?'fa-circle-check':'fa-circle'}"></i><b>${{con:'Constitution',arc:'Arcana',ins:'Insight'}[c]}</b><span>${known.successes.includes(c)?'Success':'Pending'}</span>${gm&&lv<5?`<small>DC ${DC_BY_LEVEL[lv]}</small>`:''}</div>`).join('')}</div><p>${next?.reason?`Training status: ${esc(next.reason)}${next.remaining?` — ${days(next.remaining)} remaining`:''}`:next?.check?`Next check: ${{con:'Constitution',arc:'Arcana',ins:'Insight'}[next.check]}`:'Maximum level achieved.'}</p>`:'<p>Learn an Affinity first to begin training.</p>'}</div>`:`<div class="aam-history">${history}</div>`;
   const html=`<section class="aam-shell" style="--aff-color:${aff.color}"><div class="aam-top"><div class="aam-brand"><span class="aam-logo"><i class="fas fa-gem"></i></span><div><span class="aam-overline">THE POWER WITHIN</span><h1>Averis <em>Affinity</em> Manager</h1></div></div><div class="aam-top-status"><span>${gm?'GAME MASTER':'ADVENTURER'}</span><b>V14 · 5e 5.3.3</b></div></div><div class="aam-layout"><aside class="aam-sidebar"><div class="aam-sidebar-head"><label>CHARACTER</label><select data-field="actorId" aria-label="Character">${actorOptions(this.actorId)}</select><div class="aam-limit">Known ${normal} / ${MAX_NORMAL} <small>Special excluded</small></div></div><div class="aam-sidebar-title">ELEMENTAL AFFINITIES <span>${ALL.filter(x=>!x.unavailable).length}</span></div><div class="aam-aff-list">${tiles}</div></aside><main class="aam-main"><div class="aam-aff-hero"><div class="aam-glow"></div><div class="aam-hero-icon">${icons(aff)}</div><div class="aam-hero-content"><small>AFFINITY PATH</small><h2>${esc(aff.name)}</h2><p>${pill} ${aff.special?'<span class="aam-pill special">Special</span>':''}</p>${progress}</div></div><div class="aam-tab-bar"><button type="button" data-action="tab" data-id="abilities" class="${this.tab==='abilities'?'current':''}"><i class="fas fa-book-open"></i> Abilities</button><button type="button" data-action="tab" data-id="training" class="${this.tab==='training'?'current':''}"><i class="fas fa-chart-line"></i> Training</button><button type="button" data-action="tab" data-id="history" class="${this.tab==='history'?'current':''}"><i class="fas fa-clock-rotate-left"></i> History</button></div><div class="aam-main-scroll">${content}</div><div class="aam-bottom">${gmControls}${playerCta}${footer}</div></main></div></section>`;
@@ -215,7 +231,7 @@ class AffinityDashboard extends foundry.applications.api.ApplicationV2{
    if(action==='record')await runCheck(actor,aff,true);
    if(action==='set-level')await adjustLevel(actor,aff);
    if(action==='remove')await removeKnown(actor,aff);
-    if(action==='sync-features'){const result=await reconcileFeatures(actor);if(result)info(`Features synchronized: ${result.created} added, ${result.deleted} removed; ${result.expectedCount} expected.`);}
+    if(action==='sync-features'){const ok=await confirm('Restore missing Features','GM only: restore missing native Affinity Features. Manually deleted Features will be recreated by this explicit command.','Restore Features');if(ok){const result=await reconcileFeatures(actor,profile(actor),{restore:true});if(result)info(`Features restored: ${result.created} added, ${result.deleted} removed; ${result.expectedCount} expected.`);}}
     if(action==='reset-cooldown')await resetTrainingCooldown(actor,aff);
    if(action==='use')await activate(actor,aff,Number(btn.dataset.level));
    if(action==='dice')await quickDice(actor,aff,Number(btn.dataset.level),btn.dataset.dice);
@@ -229,7 +245,7 @@ async function open({actor=null,affinity=null}={}){
     warn('No accessible world character Actors. Open an imported world character and try again.');
     return false;
   }
-  if(isGM())await reconcileFeatures(actor??visibleActors()[0],undefined,{notify:false});
+  // Never automatically restore deleted Features just by opening a window.
   dashboard??=new AffinityDashboard();
   try {
     await dashboard.show(actor,affinity);
@@ -266,3 +282,16 @@ Hooks.on('getHeaderControlsApplicationV2',(app,controls)=>{
   });
 });
 Hooks.on('updateActor',a=>{if(dashboard?.rendered&&a.id===dashboard.actorId)void dashboard.render({force:true}).catch(err);});
+
+Hooks.on('deleteItem',(item,options={},userId)=>{
+ if(!item?.parent||item.parent.documentName!=='Actor'||options?.averisAffinityManagedSync)return;
+ const key=getOwnedFeatureIdentity(item);if(!key)return;
+ // Only authoring client records deletion, preventing multi-GM race.
+ if(game.user?.id!==userId)return;
+ const [id,level]=key.split(':');
+ const actor=item.parent;
+ if(!actor.canUserModify?.(game.user,'update'))return;
+ const state=profile(actor);
+ if(!state.known[id])return;
+ void actor.setFlag(MODULE_ID,'progress',suppressFeature(state,id,Number(level))).catch(err);
+});
