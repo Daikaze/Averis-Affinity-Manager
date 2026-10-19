@@ -39,7 +39,14 @@ async function reconcileFeatures(a,progress=profile(a),{notify=true,affinityId=n
  const key=a.uuid??a.id;
  if(syncing.has(key))return null;
  syncing.add(key);
- try{return await syncActorFeatures(a,progress,{affinityId,restore});}
+ try{
+   const result=await syncActorFeatures(a,progress,{affinityId,restore});
+   if(restore && progress.suppressedFeatures?.length){
+     const cleared=normalizeState(progress);cleared.suppressedFeatures=[];
+     await persist(a,cleared);
+   }
+   return result;
+ }
  catch(error){
    console.error('[Affinity Manager] Feature sync failed for '+a.name,error);
    if(notify)warn('Affinity progression saved, but Character Sheet Features could not be synchronized. Use Sync Features in the GM panel.');
@@ -174,7 +181,17 @@ async function activate(a,id,level){
  if(limit!==null&&used>=limit)throw Error('No Long Rest uses remaining.');
  const feat=(a.items?.contents??[]).find(i=>getOwnedFeatureIdentity(i)===id+':'+level);
  if(!feat)throw Error('This Feature has been removed from the Character Sheet. GM can restore it explicitly using Restore Features.');
- const activities=feat.system?.activities;
+ let item=feat;
+ let activities=item.system?.activities;
+ // Migrates JUST the selected older v0.1.4 Feature. This is not a sync of
+ // all known Affinities and does not resurrect manually removed Features.
+ if(!activities?.get?.('affinityActivate')&&!activities?.affinityActivate){
+   if(typeof a.updateEmbeddedDocuments!=='function')throw Error('Actor cannot upgrade Activities.');
+   const definition=(await import('./features.mjs')).createFeatureData(id,level);
+   await a.updateEmbeddedDocuments('Item',[{_id:item.id,'system.activities':definition.system.activities,effects:definition.effects}],{averisAffinityManagedSync:true});
+   item=a.items?.get?.(item.id)??a.items?.contents?.find?.(i=>i.id===item.id)??item;
+   activities=item.system?.activities;
+ }
  const activity=activities?.get?.('affinityStrike')??activities?.get?.('affinityActivate')
   ??activities?.contents?.find?.(x=>x.id==='affinityStrike'||x.id==='affinityActivate')
   ??Object.values(activities??{}).find(x=>x?._id==='affinityStrike'||x?._id==='affinityActivate');
