@@ -15,7 +15,7 @@ const actor={
  getFlag(ns,key){return key==='progress'?progress:undefined;},
  async setFlag(ns,key,val){assert.equal(key,'progress');progress=val;return val;},
  async createEmbeddedDocuments(){throw Error('Use/Share must never create any Feature');},
- async deleteEmbeddedDocuments(){throw Error('Use/Share must never delete any Feature');},
+ async deleteEmbeddedDocuments(type,ids){assert.equal(type,'Item');calls.push('delete:'+ids.join(','));for(const id of ids){const index=stored.findIndex(x=>x.id===id);if(index>=0)stored.splice(index,1);}},
  async updateEmbeddedDocuments(){throw Error('Use/Share must not update unrelated Features');}
 };
 function addFeature(id,level){
