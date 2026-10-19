@@ -140,7 +140,7 @@ class AffinityDashboard extends foundry.applications.api.ApplicationV2{
   const el=document.createElement('div');el.innerHTML=html;return el.firstElementChild;
  }
  _replaceHTML(rendered,content){content.replaceChildren(rendered);}
- async _onRender(context,opts){await super._onRender(context,opts);this._resize?.disconnect();const root=this.element?.querySelector('.aam-shell');if(!root)return;const compact=()=>root.classList.toggle('compact',root.clientWidth<800);compact();this._resize=new ResizeObserver(compact);this._resize.observe(root);
+ async _onRender(context,opts){await super._onRender(context,opts);this._resize?.disconnect();const root=this.element?.querySelector('.aam-shell');if(!root)return;const compact=()=>root.classList.toggle('compact',root.clientWidth<800);compact();if(typeof ResizeObserver!=='undefined'){this._resize=new ResizeObserver(compact);this._resize.observe(root);}
   root.querySelector('[data-field="actorId"]')?.addEventListener('change',e=>{this.actorId=e.target.value;this.render({force:true});});
   for(const btn of root.querySelectorAll('button[data-action]'))btn.addEventListener('click',async e=>{e.preventDefault();const action=btn.dataset.action,id=btn.dataset.id,actor=actorById(this.actorId),aff=this.affinityId;try{
    if(action==='affinity'){this.affinityId=id;this.tab='abilities';await this.render({force:true});return;}
@@ -163,14 +163,44 @@ class AffinityDashboard extends foundry.applications.api.ApplicationV2{
  async close(...args){this._resize?.disconnect();return super.close(...args);}
 }
 let dashboard=null;
-async function open({actor=null,affinity=null}={}){if(!visibleActors().length)return warn('No accessible world character Actors.');dashboard??=new AffinityDashboard();await dashboard.show(actor,affinity);}
+async function open({actor=null,affinity=null}={}){
+  if(!visibleActors().length) {
+    warn('No accessible world character Actors. Open an imported world character and try again.');
+    return false;
+  }
+  dashboard??=new AffinityDashboard();
+  try {
+    await dashboard.show(actor,affinity);
+    return true;
+  } catch (error) {
+    // A failed first render must not poison subsequent open attempts.
+    if(!dashboard.rendered)dashboard=null;
+    throw error;
+  }
+}
+async function openSafe(options={}) {
+  try { return await open(options); }
+  catch(error) { err(error); return false; }
+}
 async function resetUses(a){if(!ownership(a))throw Error('No permission.');if(!await confirm('Long Rest · Reset Affinities',`Reset all tracked Affinity uses for ${esc(a.name)}? This does not change D&D spell slots or standard rest resources.`,'Reset Affinity Uses'))return;await change(a,s=>longRest(s));}
 Hooks.once('init',()=>{
  game.settings.register(MODULE_ID,'failureDays',{name:'Training cooldown after failed check (world days)',scope:'world',config:true,type:Number,range:{min:0,max:30,step:1},default:3});
  game.settings.register(MODULE_ID,'successDays',{name:'Training cooldown after upgrading (world days)',scope:'world',config:true,type:Number,range:{min:0,max:30,step:1},default:7});
- game.keybindings.register(MODULE_ID,'open',{name:'Open Averis Affinity Manager',editable:[{key:'KeyA',modifiers:['ALT']}],onDown:()=>{void open();return true;},restricted:false});
+ game.keybindings.register(MODULE_ID,'open',{name:'Open Averis Affinity Manager',editable:[{key:'KeyA',modifiers:['ALT']}],onDown:()=>{void openSafe();return true;},restricted:false});
  game.modules.get(MODULE_ID).api={open,grantAffinity:grant,resetUses,getProgress:profile,getCatalog:()=>AFFINITIES};
 });
 Hooks.once('ready',()=>{if(game.system?.id!=='dnd5e')warn('Averis Affinity Manager requires the D&D 5e system.');game.socket?.on(SOCKET,msg=>void handleRequest(msg).catch(err));});
-Hooks.on('getHeaderControlsApplicationV2',(app,controls)=>{const actor=app.actor??app.document;if(!isActor(actor)||(!ownership(actor)))return;controls.unshift({icon:'fas fa-gem',label:'Affinity Manager',action:()=>void open({actor})});});
-Hooks.on('updateActor',a=>{if(dashboard?.rendered&&a.id===dashboard.actorId)dashboard.render({force:true});});
+Hooks.on('getHeaderControlsApplicationV2',(app,controls)=>{
+  const actor=app.actor??app.document;
+  if(!isActor(actor)||!ownership(actor))return;
+  // Foundry V14 requires action to be an identifier and onClick to be the handler.
+  // The prior function-valued "action" rendered a menu entry that did nothing.
+  if(controls.some(control=>control.action==='averisAffinityOpen'))return;
+  controls.unshift({
+    action:'averisAffinityOpen',
+    icon:'fas fa-gem',
+    label:'Affinity Manager',
+    onClick:()=>openSafe({actor})
+  });
+});
+Hooks.on('updateActor',a=>{if(dashboard?.rendered&&a.id===dashboard.actorId)void dashboard.render({force:true}).catch(err);});
