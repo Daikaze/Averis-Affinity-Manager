@@ -11,3 +11,10 @@ test('source player catalog never publishes numerical save DC labels',async()=>{
   assert.doesNotMatch(x,/\bDC\s*[—:()\-\s]*\d{2}\b/i,`${a.name} Lv${ability.level}`);
  }
 });
+test('markdown-emphasized numeric save DC is never included in player or Feat descriptions',()=>{
+  const example='The first time each round the target fails a **Constitution Saving Throw** **(14)**, it takes **1d6 Necrotic Damage**.';
+  const visible=redactDC(example);
+  assert.match(visible,/DC: GM only/);
+  assert.doesNotMatch(visible,/\*\*\(14\)\*\*/);
+  assert.match(visible,/1d6 Necrotic Damage/);
+});
