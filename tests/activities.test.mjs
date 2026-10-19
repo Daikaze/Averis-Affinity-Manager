@@ -24,19 +24,19 @@ test('each of the 65 abilities has at least one native DnD5e 5.3.3 activity',()=
 test('direct spell attack gets Attack activity with explicit attack classification and damage',()=>{
  const a=AFFINITIES.find(x=>x.id==='fire').abilities[0];
  const acts=makeActivityBundle(a);
- assert.equal(acts.affinityStrike.type,'attack');
- assert.equal(acts.affinityStrike.attack.type.classification,'spell');
- assert.equal(acts.affinityStrike.attack.type.value,'ranged');
- assert.equal(acts.affinityStrike.damage.parts[0].number,1);
- assert.equal(acts.affinityStrike.damage.parts[0].denomination,10);
- assert.deepEqual(acts.affinityStrike.damage.parts[0].types,['fire']);
+ assert.equal(acts.affinityStrike01.type,'attack');
+ assert.equal(acts.affinityStrike01.attack.type.classification,'spell');
+ assert.equal(acts.affinityStrike01.attack.type.value,'ranged');
+ assert.equal(acts.affinityStrike01.damage.parts[0].number,1);
+ assert.equal(acts.affinityStrike01.damage.parts[0].denomination,10);
+ assert.deepEqual(acts.affinityStrike01.damage.parts[0].types,['fire']);
 });
 test('conditional movement-trigger damage is a separate optional roll not instant auto-damage',()=>{
  const a=AFFINITIES.find(x=>x.id==='wind').abilities[0];
  const acts=makeActivityBundle(a);
  assert.equal(acts.affinityActivate.type,'utility');
- assert.ok(acts.affinityDamage||acts.affinityActivate);
- assert.equal(acts.affinityStrike,undefined);
+ assert.ok(acts.affinityDamage01||acts.affinityActivate);
+ assert.equal(acts.affinityStrike01,undefined);
 });
 test('variable saves do not reveal private GM DC in native item activities',()=>{
  for(const affinity of AFFINITIES)for(const ability of affinity.abilities){

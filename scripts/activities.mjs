@@ -51,7 +51,7 @@ export function makeActivityBundle(ability){
  if(safeAttack){
   const m=cleaned(desc).match(/\b(Ranged|Melee)\s+(Weapon|Spell)\s+Attack\b/i);
   if(m){
-   actions.affinityStrike={_id:"affinityStrike",type:"attack",name:"Attack and Damage",
+   actions.affinityStrike01={_id:"affinityStrike01",type:"attack",name:"Attack and Damage",
      activation:{type:activation,cost:1,override:true},
      attack:{type:{value:m[1].toLowerCase(),classification:m[2].toLowerCase()}},
      damage:{includeBase:false,parts:[parts[0]]},
@@ -62,12 +62,12 @@ export function makeActivityBundle(ability){
  // Additional die rolls are explicitly optional; do not apply delayed damage
  // (e.g. marked targets, poison-over-time, and trigger reactions) immediately.
  if(safeAttack&&parts.length>1){
-   actions.affinityExtraDamage={_id:'affinityExtraDamage',type:'damage',name:'Conditional Bonus Damage (GM adjudicates)',
+   actions.aamExtraDamage01={_id:'aamExtraDamage01',type:'damage',name:'Conditional Bonus Damage (GM adjudicates)',
     activation:{type:'',cost:1,override:true},
     damage:{parts:[parts[1]]},consumption:{targets:[],spellSlot:false}};
  }
  if(!safeAttack&&parts.length===1){
-   actions.affinityDamage={_id:"affinityDamage",type:"damage",name:"Roll Damage (GM adjudicates trigger)",
+   actions.affinityDamage01={_id:"affinityDamage01",type:"damage",name:"Roll Damage (GM adjudicates trigger)",
     activation:{type:"",cost:1,override:true},
     damage:{parts:[parts[0]]},
     consumption:{targets:[],spellSlot:false}
@@ -76,7 +76,7 @@ export function makeActivityBundle(ability){
  // Healing is an optional choice and must not be forced when removing conditions.
  const h=cleaned(desc).match(/\b(?:Restore|Regain|Heals?|Healing)\b[^\n]{0,40}?\b(\d+)d(4|6|8|10|12)(?:\s*\+\s*(PB|\d+))?\s*(?:HP|Hit Points)?\b/i);
  if(h){
-  actions.affinityHeal={_id:"affinityHeal",type:"heal",name:"Restore Hit Points (if chosen)",
+  actions.affinityHeal0001={_id:"affinityHeal0001",type:"heal",name:"Restore Hit Points (if chosen)",
     activation:{type:"",cost:1,override:true},
     healing:{number:Number(h[1]),denomination:Number(h[2]),types:["healing"],bonus:h[3]?.toLowerCase()==="pb"?"@prof":h[3]??""},
     consumption:{targets:[],spellSlot:false}
@@ -93,7 +93,7 @@ export function makeActiveEffects(affinityId,level){
  const ac=affinityId==='ice'&&level===2?1:affinityId==='earth'&&level===5?2:0;
  if(!ac)return [];
  return [{
-  _id:'affinityAcBonus',
+  _id:'affinityAcBonus1',
   name:'Affinity: +'+ac+' AC (1 minute)',
   img:'icons/svg/shield.svg',
   transfer:false,disabled:false,

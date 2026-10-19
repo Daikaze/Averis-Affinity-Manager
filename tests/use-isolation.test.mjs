@@ -22,7 +22,7 @@ function addFeature(id,level){
  const item=createFeatureData(id,level);
  item.id=id+'-'+level;
  item.system.activities={
-  get(key){if(key==='affinityStrike' ||key==='affinityActivate')return {use:async()=>{calls.push(id+':'+level);return {id:'message'};}};return null;}
+  get(key){if(key==='affinityStrike01' ||key==='affinityActivate')return {use:async()=>{calls.push(id+':'+level);return {id:'message'};}};return null;}
  };
  stored.push(item);return item;
 }

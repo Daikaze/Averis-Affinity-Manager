@@ -1,3 +1,7 @@
+## v0.2.1 — D&D 5e Activity ID compliance
+
+Every generated D&D 5e 5.3.3 Activity and linked Active Effect now uses an explicitly verified 16-character Foundry document ID. This prevents invalid or silently discarded activities. Version v0.2.1 supersedes the v0.2.0 playtest package.
+
 ## v0.2.0 — Independent Affinities and native D&D 5e Activities
 
 - **Remove Affinity** clears the Actor's known-Affinity flag, cooldown and usage history for that affinity. It deletes **only** the module-owned Features belonging to that Affinity. Another known Affinity is not created, removed or swapped in.

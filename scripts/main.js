@@ -192,9 +192,9 @@ async function activate(a,id,level){
    item=a.items?.get?.(item.id)??a.items?.contents?.find?.(i=>i.id===item.id)??item;
    activities=item.system?.activities;
  }
- const activity=activities?.get?.('affinityStrike')??activities?.get?.('affinityActivate')
-  ??activities?.contents?.find?.(x=>x.id==='affinityStrike'||x.id==='affinityActivate')
-  ??Object.values(activities??{}).find(x=>x?._id==='affinityStrike'||x?._id==='affinityActivate');
+ const activity=activities?.get?.('affinityStrike01')??activities?.get?.('affinityActivate')
+  ??activities?.contents?.find?.(x=>x.id==='affinityStrike01'||x.id==='affinityActivate')
+  ??Object.values(activities??{}).find(x=>x?._id==='affinityStrike01'||x?._id==='affinityActivate');
  if(typeof activity?.use!=='function')throw Error('This Feature has no D&D activity yet. Ask the GM to restore or upgrade its Feature.');
  using.add(useKey);
  try{
