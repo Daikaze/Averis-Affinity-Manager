@@ -1,6 +1,7 @@
 import {AFFINITY_MAP} from './catalog.mjs';
 import {MODULE_ID,normalizeState} from './engine.mjs';
 import {redactDC} from './redact.mjs';
+import {makeActivityBundle} from './activities.mjs';
 
 export const FEATURE_FLAG='managedFeature';
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -28,7 +29,8 @@ export function createFeatureData(id,level) {
     type:'feat',
     img:'icons/svg/aura.svg',
     system:{
-      description:{value:featureHTML(affinity,ability)}
+      description:{value:featureHTML(affinity,ability)},
+      activities:makeActivityBundle(ability)
     },
     flags:{
       [MODULE_ID]:{
@@ -50,42 +52,46 @@ export function getOwnedFeatureIdentity(item) {
   return `${id}:${level}`;
 }
 
-export function planFeatureSync(rawProgress,items=[]){
-  const state=normalizeState(rawProgress);
-  const desired=new Set();
-  for(const [id,p] of Object.entries(state.known)){
-    const affinity=AFFINITY_MAP[id];
-    if(!affinity||affinity.unavailable)continue;
-    for(let level=1;level<=p.level;level++)if(affinity.abilities.some(a=>a.level===level))desired.add(`${id}:${level}`);
-  }
-  const present=new Set(),deleteIds=[];
-  for(const item of items??[]){
-    const key=getOwnedFeatureIdentity(item);
-    if(!key)continue;
-    if(!item.id)continue; // Do not delete unsaved or malformed documents.
-    if(!desired.has(key)||present.has(key))deleteIds.push(item.id);
-    else present.add(key);
-  }
-  const creates=[];
-  for(const key of desired){
-    if(present.has(key))continue;
-    const [id,levelStr]=key.split(':');
-    creates.push(createFeatureData(id,Number(levelStr)));
-  }
-  return {creates,deleteIds,expectedCount:desired.size};
-}
 
 /**
- * Idempotent reconciliation. This intentionally never changes other feat Items,
- * does not modify D&D item activities or grant effects, and never removes
- * manually authored features merely because they have a similar name.
+ * Only synchronizes the named Affinity (when provided); manual deletions
+ * are not resurrected by unrelated actions. GM can explicitly restore.
  */
-export async function syncActorFeatures(actor,progress){
-  if(!actor||typeof actor.createEmbeddedDocuments!=='function'||typeof actor.deleteEmbeddedDocuments!=='function')throw Error('Character Actor does not support embedded Item updates.');
-  const existing=actor.items?.contents??[];
-  const {creates,deleteIds,expectedCount}=planFeatureSync(progress,existing);
-  // Delete first so a partially interrupted operation can be safely retried.
-  if(deleteIds.length)await actor.deleteEmbeddedDocuments('Item',deleteIds);
-  if(creates.length)await actor.createEmbeddedDocuments('Item',creates);
-  return {created:creates.length,deleted:deleteIds.length,expectedCount};
+export function planFeatureSync(rawProgress,items=[],{affinityId=null,restore=false}={}){
+ const state=normalizeState(rawProgress);
+ if(affinityId&&!AFFINITY_MAP[affinityId])throw Error('Invalid Affinity filter.');
+ const desired=new Set(),suppressed=new Set(state.suppressedFeatures??[]);
+ for(const [id,p] of Object.entries(state.known)){
+   if(affinityId&&id!==affinityId)continue;
+   const aff=AFFINITY_MAP[id];if(!aff||aff.unavailable)continue;
+   for(let level=1;level<=p.level;level++){
+     if(!aff.abilities.some(a=>a.level===level))continue;
+     const key=id+':'+level;
+     if(restore||!suppressed.has(key))desired.add(key);
+   }
+ }
+ const present=new Set(),deleteIds=[];
+ for(const item of items??[]){
+   const key=getOwnedFeatureIdentity(item);
+   if(!key||!item.id)continue;
+   if(affinityId&&!key.startsWith(affinityId+':'))continue;
+   if(!desired.has(key)||present.has(key))deleteIds.push(item.id);
+   else present.add(key);
+ }
+ const creates=[];
+ for(const key of desired){
+   if(present.has(key))continue;
+   const [id,level]=key.split(':');
+   creates.push(createFeatureData(id,Number(level)));
+ }
+ return {creates,deleteIds,expectedCount:desired.size};
+}
+/** Tagged deletes are deliberately excluded from the manual delete hook. */
+export async function syncActorFeatures(actor,progress,options={}){
+ if(!actor||typeof actor.createEmbeddedDocuments!=='function'||typeof actor.deleteEmbeddedDocuments!=='function')
+   throw Error('Character Actor does not support embedded Item updates.');
+ const plan=planFeatureSync(progress,actor.items?.contents??[],options);
+ if(plan.deleteIds.length)await actor.deleteEmbeddedDocuments('Item',plan.deleteIds,{averisAffinityManagedSync:true});
+ if(plan.creates.length)await actor.createEmbeddedDocuments('Item',plan.creates,{averisAffinityManagedSync:true});
+ return {created:plan.creates.length,deleted:plan.deleteIds.length,expectedCount:plan.expectedCount};
 }
