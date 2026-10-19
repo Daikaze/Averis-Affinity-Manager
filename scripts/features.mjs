@@ -91,7 +91,25 @@ export async function syncActorFeatures(actor,progress,options={}){
  if(!actor||typeof actor.createEmbeddedDocuments!=='function'||typeof actor.deleteEmbeddedDocuments!=='function')
    throw Error('Character Actor does not support embedded Item updates.');
  const plan=planFeatureSync(progress,actor.items?.contents??[],options);
+ const upgrades=[];
+ const deleted=new Set(plan.deleteIds);
+ for(const item of actor.items?.contents??[]){
+  const key=getOwnedFeatureIdentity(item);
+  if(!key||deleted.has(item.id))continue;
+  if(options.affinityId&&!key.startsWith(options.affinityId+':'))continue;
+  if(typeof item.system?.activities?.get==='function' && item.system.activities.get('affinityActivate'))continue;
+  if(item.system?.activities?.affinityActivate)continue;
+  const [id,level]=key.split(':');
+  const original=createFeatureData(id,Number(level));
+  const existing=item.system?.activities;
+  const raw=existing?.toObject?.()??(existing&&typeof existing==='object'&&!Array.isArray(existing)?existing:{});
+  upgrades.push({_id:item.id,'system.activities':{...raw,...original.system.activities}});
+ }
  if(plan.deleteIds.length)await actor.deleteEmbeddedDocuments('Item',plan.deleteIds,{averisAffinityManagedSync:true});
+ if(upgrades.length){
+  if(typeof actor.updateEmbeddedDocuments!=='function')throw Error('Actor cannot upgrade existing Activity data.');
+  await actor.updateEmbeddedDocuments('Item',upgrades,{averisAffinityManagedSync:true});
+ }
  if(plan.creates.length)await actor.createEmbeddedDocuments('Item',plan.creates,{averisAffinityManagedSync:true});
- return {created:plan.creates.length,deleted:plan.deleteIds.length,expectedCount:plan.expectedCount};
+ return {created:plan.creates.length,deleted:plan.deleteIds.length,expectedCount:plan.expectedCount,upgraded:upgrades.length};
 }
