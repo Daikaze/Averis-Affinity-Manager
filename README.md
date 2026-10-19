@@ -1,3 +1,11 @@
+## v0.1.4 — Native Features and reliable Remove Affinity
+
+- On each unlocked Affinity Level (1–5), the GM automatically grants a **native D&D 5e Feat Item**, visible in **Character Sheet → Features**. The ability name and canonical rules are copied from the Affinity catalog. Numeric DCs are redacted from player-readable descriptions.
+- Removing an Affinity from the GM panel now confirms explicitly, persists the removal and automatically removes the module-created Feats for that Affinity. It never deletes manually authored or third-party Feats, even if their names match.
+- GM Level override (down or up) reconciles unlocked Features. Reopening the Manager as GM repairs missing older Features; **Sync Features** in the GM panel can rerun this process manually.
+- Feature creation is idempotent: no duplicates when retried; failed embedded updates warn the GM and remain retryable without losing Affinity progress.
+- These are **descriptive D&D Feat Items** rather than automated attack/spell activities; combat mechanics and tracked uses continue to run via the existing Affinity Manager and normal D&D workflows.
+
 ## v0.1.3 — Training clock / DialogV2 fixes
 
 - Detect abnormally far-future cooldown timestamps (more than 45 game days from the present). A clock reset or mismatch will no longer freeze training for hundreds of thousands of days. The longest user-configurable cooldown is 30 days; a 45-day safeguard includes slack for minor clock adjustments.
