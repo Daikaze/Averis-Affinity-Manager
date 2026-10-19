@@ -23,7 +23,7 @@ const day=86400;
 const isObj=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const cleanInt=(x,def=0)=>Number.isSafeInteger(Number(x))?Number(x):def;
 const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,cleanInt(x,lo)));
-export function emptyState(){return {version:1,known:{},usage:{},history:[]};}
+export function emptyState(){return {version:2,known:{},usage:{},suppressedFeatures:[],history:[]};}
 export function normalizeState(x){
   const raw=isObj(x)?x:{};const known={};
   for(const [id,v] of Object.entries(isObj(raw.known)?raw.known:{})){
@@ -36,7 +36,12 @@ export function normalizeState(x){
   for(const [id,u] of Object.entries(isObj(raw.usage)?raw.usage:{})){
     if(/^(fire|earth|wind|water|lightning|psychic|necrotic|poison|acid|ice|radiant|force|blood):[1-5]$/.test(id)) usage[id]=clamp(u,0,999);
   }
-  return {version:1,known,usage,history:Array.isArray(raw.history)?raw.history.slice(-HISTORY_LIMIT).filter(isObj):[]};
+  const suppressedFeatures=[...new Set(Array.isArray(raw.suppressedFeatures)?raw.suppressedFeatures:[])].filter(key=>{
+    if(typeof key!=='string'||!/^([a-z]+):[1-5]$/.test(key))return false;
+    const [id,level]=key.split(':');
+    return !!AFFINITY_MAP[id]&&Number(level)>=1;
+  }).slice(0,120);
+  return {version:2,known,usage,suppressedFeatures,history:Array.isArray(raw.history)?raw.history.slice(-HISTORY_LIMIT).filter(isObj):[]};
 }
 export const knownCount=state=>Object.entries(normalizeState(state).known).filter(([id])=>!AFFINITY_MAP[id].special).length;
 export function maxUses(ability,actorPb=2){
@@ -53,6 +58,7 @@ export function grantAffinity(state,id,{source='innate',teacherId=null,teacherLe
   if(source==='teacher'){
     if(!teacherId||!Number.isFinite(Number(teacherLevel))||Number(teacherLevel)<5)throw Error('The teaching creature must possess Level 5 of this Affinity.');
   }else if(!['innate','gm-special'].includes(source))throw Error('Invalid learning source.');
+  s.suppressedFeatures=s.suppressedFeatures.filter(k=>!k.startsWith(id+':'));
   s.known[id]={level:0,successes:[],retryAt:0};
   return recordHistory(s,{type:'grant',id,source,teacherId});
 }
@@ -98,4 +104,17 @@ export function clearTrainingCooldown(state,id){
   // Do not erase successes, levels, ability uses, or other affinities.
   return recordHistory(s,{type:'cooldown-reset',id});
 }
-export function removeAffinity(state,id){const s=normalizeState(state);if(!s.known[id])throw Error('This Affinity is not known.');delete s.known[id];for(let i=1;i<=5;i++)delete s.usage[`${id}:${i}`];return recordHistory(s,{type:'remove',id});}
+export function removeAffinity(state,id){const s=normalizeState(state);if(!s.known[id])throw Error('This Affinity is not known.');delete s.known[id];s.suppressedFeatures=s.suppressedFeatures.filter(k=>!k.startsWith(id+':'));for(let i=1;i<=5;i++)delete s.usage[`${id}:${i}`];return recordHistory(s,{type:'remove',id});}
+/** Remember explicit Character Sheet deletion, so no later action resurrects it. */
+export function suppressFeature(state,id,level){
+ const s=normalizeState(state),key=`${id}:${level}`;
+ if(!AFFINITY_MAP[id]||!Number.isInteger(Number(level))||Number(level)<1||Number(level)>5)throw Error('Invalid Affinity Feature.');
+ if(!s.suppressedFeatures.includes(key))s.suppressedFeatures.push(key);
+ return s;
+}
+/** A deliberate GM restore of a feature clears the manual deletion marker. */
+export function unsuppressFeature(state,id,level){
+ const s=normalizeState(state),key=`${id}:${level}`;
+ s.suppressedFeatures=s.suppressedFeatures.filter(k=>k!==key);
+ return s;
+}
