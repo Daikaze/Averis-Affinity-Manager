@@ -1,3 +1,14 @@
+## v0.2.0 — Independent Affinities and native D&D 5e Activities
+
+- **Remove Affinity** clears the Actor's known-Affinity flag, cooldown and usage history for that affinity. It deletes **only** the module-owned Features belonging to that Affinity. Another known Affinity is not created, removed or swapped in.
+- **Use / Share** activates the selected Feature's native D&D Activity. It no longer triggers a global Feature sync and cannot recreate all learned Affinities as a side effect.
+- A Feature manually deleted in Character Sheet is remembered as suppressed and is **never automatically resurrected** by rest, level changes, opening the window, or using a different ability. A deliberate GM **Restore Features** command can restore those missing Features.
+- All 65 catalogued abilities have native D&D 5e 5.3.3 **Utility Activities**, including their action/bonus/reaction timing when specified. Where the ability has unambiguous immediate attack damage, it also has a proper Attack Activity; other explicitly described damage or healing gains separate optional Damage/Heal Activities.
+- Conditional choices, saves with GM-only DC, delayed damage, area and timed side effects still require D&D's normal rolls and GM adjudication. Numbers for GM-only DC are never embedded into player-readable Item data. Activity activation itself runs the D&D system/Midi-QOL if available, but the module does not invent missing mechanics.
+- Exact self AC bonuses on Ice Armor and Earth Sovereign have linked native **Active Effects**. Other multi-target/conditional effects are not applied without their prerequisite conditions or GM review.
+- Older managed Features without Activities can be upgraded individually when used, or in a deliberate GM Restore Features pass.
+- Item IDs/flags, Actor affinity progression and the original source rules stay stable. Long Rest usage remains managed in the Affinity Manager. Using an Item directly in the Character Sheet does not automatically decrement the module's separate use counter in this version.
+
 ## v0.1.4 — Native Features and reliable Remove Affinity
 
 - On each unlocked Affinity Level (1–5), the GM automatically grants a **native D&D 5e Feat Item**, visible in **Character Sheet → Features**. The ability name and canonical rules are copied from the Affinity catalog. Numeric DCs are redacted from player-readable descriptions.
