@@ -1,7 +1,7 @@
 import {AFFINITY_MAP} from './catalog.mjs';
 import {MODULE_ID,normalizeState} from './engine.mjs';
 import {redactDC} from './redact.mjs';
-import {makeActivityBundle} from './activities.mjs';
+import {makeActivityBundle,makeActiveEffects} from './activities.mjs';
 
 export const FEATURE_FLAG='managedFeature';
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -24,14 +24,17 @@ export function createFeatureData(id,level) {
   const affinity=AFFINITY_MAP[id];
   const ability=affinity?.abilities?.find(v=>v.level===level);
   if(!affinity||affinity.unavailable||!ability)throw Error('Unknown Affinity or ability level.');
+  const activities=makeActivityBundle(ability),effects=makeActiveEffects(id,level);
+  if(effects.length)activities.affinityActivate.effects=effects.map(e=>({_id:e._id}));
   return {
     name:`${affinity.name} Affinity — ${ability.title}`,
     type:'feat',
     img:'icons/svg/aura.svg',
     system:{
       description:{value:featureHTML(affinity,ability)},
-      activities:makeActivityBundle(ability)
+      activities
     },
+    effects,
     flags:{
       [MODULE_ID]:{
         [FEATURE_FLAG]:true,
