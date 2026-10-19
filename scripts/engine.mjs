@@ -4,6 +4,21 @@ export const DC_BY_LEVEL=Object.freeze([10,13,15,17,20]);
 export const CHECKS=Object.freeze(['con','arc','ins']);
 export const MAX_NORMAL=3;
 export const HISTORY_LIMIT=70;
+/**
+ * The module's longest configurable cooldown is 30 world days. Longer
+ * future offsets signal stale data (for example after an in-world clock
+ * reset), not a legitimate training cooldown. Extra slack avoids clearing
+ * valid 30-day waits after small clock adjustments.
+ */
+export const MAX_REASONABLE_COOLDOWN_DAYS=45;
+export const TRAINING_DAY_SECONDS=86400;
+export function remainingTrainingCooldown(retryAt,worldTime=0){
+  const now=Number(worldTime),target=Number(retryAt);
+  if(!Number.isFinite(now))throw Error('World time is unavailable. Ask the GM to check Foundry world time.');
+  if(!Number.isFinite(target)||target<=now)return 0;
+  const remaining=target-now;
+  return remaining>MAX_REASONABLE_COOLDOWN_DAYS*TRAINING_DAY_SECONDS?0:remaining;
+}
 const day=86400;
 const isObj=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const cleanInt=(x,def=0)=>Number.isSafeInteger(Number(x))?Number(x):def;
@@ -45,7 +60,8 @@ export function nextCheck(state,id,worldTime=0){
   const s=normalizeState(state),a=s.known[id];
   if(!a)return {reason:'Affinity is not learned.'};
   if(a.level>=5)return {reason:'Affinity is already at maximum level.'};
-  if(Number(worldTime)<a.retryAt)return {reason:'Upgrade attempt is on cooldown.',remaining:a.retryAt-Number(worldTime)};
+  const remaining=remainingTrainingCooldown(a.retryAt,worldTime);
+  if(remaining>0)return {reason:'Upgrade attempt is on cooldown.',remaining};
   const check=CHECKS.find(k=>!a.successes.includes(k));
   return {check,level:a.level+1,successes:[...a.successes]};
 }
@@ -56,6 +72,8 @@ export function attemptCheck(state,id,{check,total,worldTime,failDays=3,successD
   const n=Number(total);if(!Number.isFinite(n)||n< -100||n>1000)throw Error('Invalid check total.');
   const level=p.level,dc=DC_BY_LEVEL[level-1],pass=n>=dc;
   const a=s.known[id];
+  // Automatically repair a stale timestamp before writing the next state.
+  if(a.retryAt>Number(worldTime) && remainingTrainingCooldown(a.retryAt,worldTime)===0)a.retryAt=0;
   if(pass)a.successes.push(check);
   else a.retryAt=Number(worldTime)+clamp(failDays,0,365)*day;
   let levelUp=false;
@@ -73,4 +91,11 @@ export function useAbility(state,id,level,pb){
 }
 export function longRest(state){const s=normalizeState(state);s.usage={};return recordHistory(s,{type:'long-rest'});}
 export function gmSetLevel(state,id,level){const s=normalizeState(state);if(!s.known[id])throw Error('Grant Affinity before adjusting level.');s.known[id].level=clamp(level,0,5);s.known[id].successes=[];s.known[id].retryAt=0;return recordHistory(s,{type:'gm-set',id,level:s.known[id].level});}
+export function clearTrainingCooldown(state,id){
+  const s=normalizeState(state),record=s.known[id];
+  if(!record)throw Error('This Affinity is not known.');
+  record.retryAt=0;
+  // Do not erase successes, levels, ability uses, or other affinities.
+  return recordHistory(s,{type:'cooldown-reset',id});
+}
 export function removeAffinity(state,id){const s=normalizeState(state);if(!s.known[id])throw Error('This Affinity is not known.');delete s.known[id];for(let i=1;i<=5;i++)delete s.usage[`${id}:${i}`];return recordHistory(s,{type:'remove',id});}

@@ -83,3 +83,38 @@
 .aam-window .aam-shell.compact .aam-bottom{max-height:190px}.aam-window .aam-shell.compact .aam-gm-actions button{font-size:10px!important}
 .aam-dialog,.aam-confirm{color:#e7edf4;min-width:0;padding:8px;max-width:500px;line-height:1.6}.aam-dialog label{display:block;margin:12px 0;color:#eee7d3}.aam-dialog input,.aam-dialog select{width:100%!important;background:#263448!important;color:#fff!important;min-height:38px!important;border:1px solid #4c6380!important;padding:7px!important;border-radius:7px}
 .aam-chat{border:1px solid #7e92ab;padding:12px;background:#172339;color:#e4edf8}.aam-chat p{line-height:1.5}.aam-chat h3{color:#f4d795}.aam-chat small{color:#a4b8d0}
+/* v0.1.3: DialogV2 is not inside .aam-window; style the actual dialog body.
+   Fix white-on-white confirmation text under light Foundry and 5e themes. */
+.aam-confirm, .aam-dialog {
+  display: block !important;
+  box-sizing: border-box !important;
+  padding: 18px 20px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  border-radius: 10px !important;
+  border: 1px solid #425a79 !important;
+  background: #192637 !important;
+  color: #f1f5ff !important;
+  color-scheme: dark !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  overflow-wrap: anywhere !important;
+}
+.aam-confirm :is(p,strong,b,span,small,em,label,li),
+.aam-dialog :is(p,strong,b,span,small,em,label,li) {
+  color: #f1f5ff !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+.aam-confirm p, .aam-dialog p { margin: 0 0 11px !important; }
+.aam-dialog :is(input,select,textarea) {
+  background: #23344b !important;
+  color: #ffffff !important;
+  border: 1px solid #7794b8 !important;
+  color-scheme: dark !important;
+}
+.aam-dialog :is(input,select,textarea):focus {
+  outline: 2px solid #e0c483 !important;
+  outline-offset: 1px !important;
+}
+.aam-dialog option {background: #23344b !important; color:#fff !important;}

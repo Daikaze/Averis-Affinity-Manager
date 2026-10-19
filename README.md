@@ -1,3 +1,10 @@
+## v0.1.3 — Training clock / DialogV2 fixes
+
+- Detect abnormally far-future cooldown timestamps (more than 45 game days from the present). A clock reset or mismatch will no longer freeze training for hundreds of thousands of days. The longest user-configurable cooldown is 30 days; a 45-day safeguard includes slack for minor clock adjustments.
+- The next successful training check automatically repairs a stale timestamp, without removing already completed check successes. **GM-only Clear cooldown** is also available, preserving level, training check successes, and usage counters.
+- Display training cooldown in normalized days and hours (never "24h" after partial hour rounding).
+- Force an accessible dark background and light text inside all Affinity Manager confirmation/input dialogs independent of external light themes. Dialog buttons continue to use the host theme.
+
 > **Repository migration (v0.1.1):** The canonical source, releases, and installation manifest are now maintained at [Daikaze/Averis-Affinity-Manager](https://github.com/Daikaze/Averis-Affinity-Manager). Module ID `averis-affinity-manager` is unchanged, so world/actor flags remain associated with the same module. If updating an install linked to the old manifest, use the new URL or reinstall the package after backing up your world.
 
 # Averis Affinity Manager — v0.1.1
