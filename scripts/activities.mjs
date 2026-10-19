@@ -84,3 +84,21 @@ export function makeActivityBundle(ability){
  }
  return actions;
 }
+
+/** Simple, rules-exact self buffs safely representable as D&D Active Effects.
+ * Conditional marks, AoE, forced movement, and multiple-choice effects are
+ * intentionally not auto-applied without a save/GM decision.
+ */
+export function makeActiveEffects(affinityId,level){
+ const ac=affinityId==='ice'&&level===2?1:affinityId==='earth'&&level===5?2:0;
+ if(!ac)return [];
+ return [{
+  _id:'affinityAcBonus',
+  name:'Affinity: +'+ac+' AC (1 minute)',
+  img:'icons/svg/shield.svg',
+  transfer:false,disabled:false,
+  duration:{seconds:60},
+  changes:[{key:'system.attributes.ac.bonus',mode:2,value:String(ac),priority:20}],
+  flags:{'averis-affinity-manager':{featureBuff:true,affinityId,level}}
+ }];
+}
