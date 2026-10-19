@@ -51,7 +51,7 @@ test('all 65 affinity Features contain canonical names and no numeric saving DC'
 test('sync at Level 0 does not grant abilities; Level 1 and 3 grant exact counts',async()=>{
  const actor=mockActor();
  let s=grantAffinity(emptyState(),'water');
- assert.deepEqual(await syncActorFeatures(actor,s),{created:0,deleted:0,expectedCount:0});
+ assert.deepEqual(await syncActorFeatures(actor,s),{created:0,deleted:0,expectedCount:0,upgraded:0});
  s=gmSetLevel(s,'water',1);
  assert.equal((await syncActorFeatures(actor,s)).created,1);
  assert.equal(actor.items.contents.length,1);
@@ -107,4 +107,33 @@ test('a failure in embedded operations is propagated and can be retried',async()
  actor.createEmbeddedDocuments=async(type,items)=>{actor.items.contents.push(...items.map((v,i)=>({...v,id:'recovery-'+i})));};
  assert.equal((await syncActorFeatures(actor,state)).created,1);
  assert.equal((await syncActorFeatures(actor,state)).created,0);
+});
+
+test('deleted Feature stays suppressed even after unrelated Ability uses and another Affinity unlocks',async()=>{
+ const actor=mockActor();
+ let s=withLevel('fire',2);
+ s=grantAffinity(s,'earth');s=gmSetLevel(s,'earth',2);
+ await syncActorFeatures(actor,s);
+ const item=actor.items.contents.find(x=>x.flags['averis-affinity-manager'].key==='fire:1');
+ actor.items.contents.splice(actor.items.contents.indexOf(item),1);
+ s.suppressedFeatures=['fire:1'];
+ const plan=planFeatureSync(s,actor.items.contents,{affinityId:'earth'});
+ assert.equal(plan.creates.length,0);
+ assert.equal(plan.deleteIds.length,0);
+ const firePlan=planFeatureSync(s,actor.items.contents,{affinityId:'fire'});
+ assert.ok(!firePlan.creates.some(x=>x.flags['averis-affinity-manager'].key==='fire:1'));
+ const explicit=planFeatureSync(s,actor.items.contents,{affinityId:'fire',restore:true});
+ assert.ok(explicit.creates.some(x=>x.flags['averis-affinity-manager'].key==='fire:1'));
+});
+test('remove Affinity deletes only that family and does not restore another missing family',async()=>{
+ const actor=mockActor();let s=grantAffinity(withLevel('fire',2),'earth');s=gmSetLevel(s,'earth',1);
+ await syncActorFeatures(actor,s);
+ const fireFeat=actor.items.contents.find(x=>x.flags['averis-affinity-manager'].key==='fire:1');
+ actor.items.contents.splice(actor.items.contents.indexOf(fireFeat),1);
+ s.suppressedFeatures=['fire:1'];
+ s=removeAffinity(s,'earth');
+ const plan=planFeatureSync(s,actor.items.contents,{affinityId:'earth'});
+ assert.equal(plan.creates.length,0);
+ assert.equal(plan.deleteIds.length,1);
+ assert.equal(plan.deleteIds[0],actor.items.contents.find(x=>x.flags['averis-affinity-manager'].key==='earth:1').id);
 });
