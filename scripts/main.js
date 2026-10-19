@@ -282,7 +282,7 @@ Hooks.once('init',()=>{
  game.settings.register(MODULE_ID,'failureDays',{name:'Training cooldown after failed check (world days)',scope:'world',config:true,type:Number,range:{min:0,max:30,step:1},default:3});
  game.settings.register(MODULE_ID,'successDays',{name:'Training cooldown after upgrading (world days)',scope:'world',config:true,type:Number,range:{min:0,max:30,step:1},default:7});
  game.keybindings.register(MODULE_ID,'open',{name:'Open Averis Affinity Manager',editable:[{key:'KeyA',modifiers:['ALT']}],onDown:()=>{void openSafe();return true;},restricted:false});
- game.modules.get(MODULE_ID).api={open,grantAffinity:grant,removeAffinity:removeKnown,syncFeatures:reconcileFeatures,resetUses,getProgress:profile,getCatalog:()=>AFFINITIES};
+ game.modules.get(MODULE_ID).api={open,grantAffinity:grant,removeAffinity:removeKnown,useSelected:activate,syncFeatures:reconcileFeatures,resetUses,getProgress:profile,getCatalog:()=>AFFINITIES};
 });
 Hooks.once('ready',()=>{if(game.system?.id!=='dnd5e')warn('Averis Affinity Manager requires the D&D 5e system.');game.socket?.on(SOCKET,msg=>void handleRequest(msg).catch(err));});
 Hooks.on('getHeaderControlsApplicationV2',(app,controls)=>{
