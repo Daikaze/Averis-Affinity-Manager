@@ -1,7 +1,7 @@
 import {AFFINITIES,AFFINITY_MAP} from './catalog.mjs';
 import {registerAffinitySheetTabs} from './sheet-integration.mjs';
 import {redactDC} from './redact.mjs';
-import {syncActorFeatures,getOwnedFeatureIdentity} from './features.mjs';
+import {syncActorFeatures,getOwnedFeatureIdentity,planAffinityIconUpdates,syncActorAffinityIcons} from './features.mjs';
 import {MODULE_ID,DC_BY_LEVEL,CHECKS,MAX_NORMAL,normalizeState,emptyState,grantAffinity,gmSetLevel,removeAffinity,nextCheck,attemptCheck,useAbility,longRest,maxUses,knownCount,clearTrainingCooldown,suppressFeature} from './engine.mjs';
 
 const SOCKET=`module.${MODULE_ID}`;
@@ -270,6 +270,20 @@ class AffinityDashboard extends foundry.applications.api.ApplicationV2{
  async close(...args){this._resize?.disconnect();return super.close(...args);}
 }
 
+// Migrate old aura.svg art lazily, GM-only, without creating or removing items.
+// A retry is safe if a write fails; existing custom artwork is never touched.
+const iconMigrationRunning=new Set();
+async function refreshExistingAffinityIcons(actor){
+ if(!isGM()||!isActor(actor)||!actor?.items?.contents?.length)return 0;
+ if(typeof actor.updateEmbeddedDocuments!=='function')return 0;
+ if(!planAffinityIconUpdates(actor.items.contents).length)return 0;
+ const key=actor.uuid??actor.id;
+ if(iconMigrationRunning.has(key))return 0;
+ iconMigrationRunning.add(key);
+ try{return await syncActorAffinityIcons(actor);}
+ catch(error){console.error('[Affinity Manager] Could not upgrade existing Feature icons',error);warn('Could not refresh Affinity icons. Existing Features were not removed.');return 0;}
+ finally{iconMigrationRunning.delete(key);}
+}
 const inlineViews=new WeakMap();
 function mountInlineAffinity({app,actor,host,prior}){
  if(!host||!actor)return;
@@ -306,6 +320,7 @@ function mountInlineAffinity({app,actor,host,prior}){
  view.host=host;
  prior.refresh=()=>{if(view.host?.isConnected!==false)return view.render();};
  prior.dispose=()=>{view._generation++;view._resize?.disconnect();view.host=null;inlineViews.delete(app);};
+ if(isGM())void refreshExistingAffinityIcons(actor);
  return view.render();
 }
 const sheetTabs=registerAffinitySheetTabs({mount:mountInlineAffinity,isCharacter:isActor,canView:ownership});
@@ -317,6 +332,7 @@ async function open({actor=null,affinity=null}={}){
     return false;
   }
   // Never automatically restore deleted Features just by opening a window.
+  if(isGM())void refreshExistingAffinityIcons(actor??visibleActors()[0]);
   dashboard??=new AffinityDashboard();
   try {
     await dashboard.show(actor,affinity);
