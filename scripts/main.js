@@ -1,4 +1,5 @@
 import {AFFINITIES,AFFINITY_MAP} from './catalog.mjs';
+import {registerAffinitySheetTabs} from './sheet-integration.mjs';
 import {redactDC} from './redact.mjs';
 import {syncActorFeatures,getOwnedFeatureIdentity} from './features.mjs';
 import {MODULE_ID,DC_BY_LEVEL,CHECKS,MAX_NORMAL,normalizeState,emptyState,grantAffinity,gmSetLevel,removeAffinity,nextCheck,attemptCheck,useAbility,longRest,maxUses,knownCount,clearTrainingCooldown,suppressFeature} from './engine.mjs';
@@ -213,7 +214,7 @@ const ALL=AFFINITIES;
 const icons=aff=>`<i class="fa-solid ${esc(aff.icon)}" aria-hidden="true"></i>`;
 class AffinityDashboard extends foundry.applications.api.ApplicationV2{
  static DEFAULT_OPTIONS={id:'averis-affinity-manager-ui',classes:['aam-window'],window:{title:'Averis · Affinity Manager',icon:'fas fa-gem',resizable:true},position:{width:1130,height:730}};
- constructor(opts={}){super(opts);this.actorId='';this.affinityId='fire';this.tab='abilities';this.search='';this.compact=false;this._resize=null;}
+ constructor(opts={}){super(opts);this.actorId='';this.affinityId='fire';this.tab='abilities';this.search='';this.compact=false;this._resize=null;this.embedded=false;}
  async show(actor=null,affinity=null){if(actor)this.actorId=actor.id;if(affinity)this.affinityId=affinity;const w=Math.min(1160,Math.max(360,window.innerWidth-70)),h=Math.min(800,Math.max(340,window.innerHeight-80));if(!this.rendered){await this.render({force:true});this.setPosition({width:w,height:h});}else{this.bringToFront();await this.render({force:true});}}
  async _renderHTML(){
   const actors=visibleActors();if(!actors.some(a=>a.id===this.actorId))this.actorId=actors[0]?.id??'';
@@ -228,13 +229,25 @@ class AffinityDashboard extends foundry.applications.api.ApplicationV2{
   const footer=`<footer class="aam-footer"><button type="button" data-action="long-rest"><i class="fas fa-bed"></i> Reset Affinity Uses (Long Rest)</button>${gm?'<button type="button" data-action="sync-features" title="Reconcile current Affinity levels with native D&D Features"><i class="fas fa-arrows-rotate"></i> Restore Features</button>':''}<span><i class="fas fa-shield-alt"></i> Powered by D&D 5e 5.3.3 · GM-approved progression</span><span>Ability effects are GM-adjudicated</span></footer>`;
   const history=state.history.slice(-35).reverse().map(e=>`<div class="aam-event"><span>${esc((AFFINITY_MAP[e.id]?.name??'Affinity'))}</span><b>${esc(e.type==='check'?`${{con:'CON',arc:'Arcana',ins:'Insight'}[e.check]??'Check'} ${e.pass?'Passed':'Failed'}`:e.type==='grant'?'Learned':e.type==='use'?e.ability:e.type==='long-rest'?'Long Rest':e.type==='cooldown-reset'?'Cooldown cleared':e.type==='gm-set'?'GM level set':e.type==='remove'?'Removed':e.type)}</b><small>${e.levelUp?'Level Up!':e.type==='check'?`Step for Lv ${e.level}`:e.source??''}</small></div>`).join('')||'<div class="aam-empty">No Affinity history yet.</div>';
   const content=aff.unavailable?`<div class="aam-empty"><h3>Thunder rules not supplied</h3><p>The provided Affinity document includes “Another Affinity” but no Thunder abilities. This tree is intentionally disabled to avoid inventing rules.</p></div>`:this.tab==='abilities'?`<div class="aam-cards">${abilityCards}</div>`:this.tab==='training'?`<div class="aam-info-card"><h3>Upgrade Path</h3><p>Each upgrade requires three successful checks in order: Constitution, Arcana and Insight.</p><p>Successful checks are saved, even when a later check fails. Retry waiting times are governed by world time.</p>${known?`<div class="aam-check-track">${CHECKS.map(c=>`<div class="${known.successes.includes(c)?'done':''}"><i class="fas ${known.successes.includes(c)?'fa-circle-check':'fa-circle'}"></i><b>${{con:'Constitution',arc:'Arcana',ins:'Insight'}[c]}</b><span>${known.successes.includes(c)?'Success':'Pending'}</span>${gm&&lv<5?`<small>DC ${DC_BY_LEVEL[lv]}</small>`:''}</div>`).join('')}</div><p>${next?.reason?`Training status: ${esc(next.reason)}${next.remaining?` — ${days(next.remaining)} remaining`:''}`:next?.check?`Next check: ${{con:'Constitution',arc:'Arcana',ins:'Insight'}[next.check]}`:'Maximum level achieved.'}</p>`:'<p>Learn an Affinity first to begin training.</p>'}</div>`:`<div class="aam-history">${history}</div>`;
-  const html=`<section class="aam-shell" style="--aff-color:${aff.color}"><div class="aam-top"><div class="aam-brand"><span class="aam-logo"><i class="fas fa-gem"></i></span><div><span class="aam-overline">THE POWER WITHIN</span><h1>Averis <em>Affinity</em> Manager</h1></div></div><div class="aam-top-status"><span>${gm?'GAME MASTER':'ADVENTURER'}</span><b>V14 · 5e 5.3.3</b></div></div><div class="aam-layout"><aside class="aam-sidebar"><div class="aam-sidebar-head"><label>CHARACTER</label><select data-field="actorId" aria-label="Character">${actorOptions(this.actorId)}</select><div class="aam-limit">Known ${normal} / ${MAX_NORMAL} <small>Special excluded</small></div></div><div class="aam-sidebar-title">ELEMENTAL AFFINITIES <span>${ALL.filter(x=>!x.unavailable).length}</span></div><div class="aam-aff-list">${tiles}</div></aside><main class="aam-main"><div class="aam-aff-hero"><div class="aam-glow"></div><div class="aam-hero-icon">${icons(aff)}</div><div class="aam-hero-content"><small>AFFINITY PATH</small><h2>${esc(aff.name)}</h2><p>${pill} ${aff.special?'<span class="aam-pill special">Special</span>':''}</p>${progress}</div></div><div class="aam-tab-bar"><button type="button" data-action="tab" data-id="abilities" class="${this.tab==='abilities'?'current':''}"><i class="fas fa-book-open"></i> Abilities</button><button type="button" data-action="tab" data-id="training" class="${this.tab==='training'?'current':''}"><i class="fas fa-chart-line"></i> Training</button><button type="button" data-action="tab" data-id="history" class="${this.tab==='history'?'current':''}"><i class="fas fa-clock-rotate-left"></i> History</button></div><div class="aam-main-scroll">${content}</div><div class="aam-bottom">${gmControls}${playerCta}${footer}</div></main></div></section>`;
+  const html=`<section class="aam-shell" style="--aff-color:${aff.color}"><div class="aam-top"><div class="aam-brand"><span class="aam-logo"><i class="fas fa-gem"></i></span><div><span class="aam-overline">THE POWER WITHIN</span><h1>Averis <em>Affinity</em> Manager</h1></div></div><div class="aam-top-status"><span>${gm?'GAME MASTER':'ADVENTURER'}</span><b>V14 · 5e 5.3.3</b></div></div><div class="aam-layout"><aside class="aam-sidebar"><div class="aam-sidebar-head"><label>CHARACTER</label>${this.embedded?`<div class="aam-actor-static"><i class="fas fa-user"></i> ${esc(actor?.name??"Character")}</div>`:`<select data-field="actorId" aria-label="Character">${actorOptions(this.actorId)}</select>`}<div class="aam-limit">Known ${normal} / ${MAX_NORMAL} <small>Special excluded</small></div></div><div class="aam-sidebar-title">ELEMENTAL AFFINITIES <span>${ALL.filter(x=>!x.unavailable).length}</span></div><div class="aam-aff-list">${tiles}</div></aside><main class="aam-main"><div class="aam-aff-hero"><div class="aam-glow"></div><div class="aam-hero-icon">${icons(aff)}</div><div class="aam-hero-content"><small>AFFINITY PATH</small><h2>${esc(aff.name)}</h2><p>${pill} ${aff.special?'<span class="aam-pill special">Special</span>':''}</p>${progress}</div></div><div class="aam-tab-bar"><button type="button" data-action="tab" data-id="abilities" class="${this.tab==='abilities'?'current':''}"><i class="fas fa-book-open"></i> Abilities</button><button type="button" data-action="tab" data-id="training" class="${this.tab==='training'?'current':''}"><i class="fas fa-chart-line"></i> Training</button><button type="button" data-action="tab" data-id="history" class="${this.tab==='history'?'current':''}"><i class="fas fa-clock-rotate-left"></i> History</button></div><div class="aam-main-scroll">${content}</div><div class="aam-bottom">${gmControls}${playerCta}${footer}</div></main></div></section>`;
   const el=document.createElement('div');el.innerHTML=html;return el.firstElementChild;
  }
  _replaceHTML(rendered,content){content.replaceChildren(rendered);}
- async _onRender(context,opts){await super._onRender(context,opts);this._resize?.disconnect();const root=this.element?.querySelector('.aam-shell');if(!root)return;const compact=()=>root.classList.toggle('compact',root.clientWidth<800);compact();if(typeof ResizeObserver!=='undefined'){this._resize=new ResizeObserver(compact);this._resize.observe(root);}
-  root.querySelector('[data-field="actorId"]')?.addEventListener('change',e=>{this.actorId=e.target.value;this.render({force:true});});
-  for(const btn of root.querySelectorAll('button[data-action]'))btn.addEventListener('click',async e=>{e.preventDefault();const action=btn.dataset.action,id=btn.dataset.id,actor=actorById(this.actorId),aff=this.affinityId;try{
+ async _onRender(context,opts){
+  await super._onRender(context,opts);
+  const root=this.element?.querySelector('.aam-shell');
+  if(root)this._bindActions(root);
+ }
+ _bindActions(root){
+  this._resize?.disconnect();
+  const compact=()=>root.classList.toggle('compact',root.clientWidth<800);
+  compact();
+  if(typeof ResizeObserver!=='undefined'){
+   this._resize=new ResizeObserver(compact);
+   this._resize.observe(root);
+  }
+  root.querySelector('[data-field="actorId"]')?.addEventListener('change',e=>{this.actorId=e.target.value;void this.render({force:true}).catch(err);});
+  for(const btn of root.querySelectorAll('button[data-action]'))btn.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const action=btn.dataset.action,id=btn.dataset.id,actor=actorById(this.actorId),aff=this.affinityId;try{
    if(action==='affinity'){this.affinityId=id;this.tab='abilities';await this.render({force:true});return;}
    if(action==='tab'){this.tab=id;await this.render({force:true});return;}
    if(!actor)throw Error('Select a character.');
@@ -252,10 +265,46 @@ class AffinityDashboard extends foundry.applications.api.ApplicationV2{
     if(action==='reset-cooldown')await resetTrainingCooldown(actor,aff);
    if(action==='use')await activate(actor,aff,Number(btn.dataset.level));
    if(action==='dice')await quickDice(actor,aff,Number(btn.dataset.level),btn.dataset.dice);
-  }catch(ex){err(ex);}});
+  }catch(ex){err(ex);}finally{if(this.embedded&&action!=='affinity'&&action!=='tab')await this.render({force:true}).catch(err);}});
  }
  async close(...args){this._resize?.disconnect();return super.close(...args);}
 }
+
+const inlineViews=new WeakMap();
+function mountInlineAffinity({app,actor,host,prior}){
+ if(!host||!actor)return;
+ let view=inlineViews.get(app);
+ if(!view||view.actorId!==actor.id){
+  view?._resize?.disconnect();
+  view=Object.create(AffinityDashboard.prototype);
+  view.embedded=true;
+  view.actorId=actor.id;
+  view.affinityId='fire';
+  view.tab='abilities';
+  view._resize=null;
+  view.host=host;
+  view.render=async()=>{
+   if(!view.host)return;
+   const old=view.host.querySelector?.('.aam-shell');
+   const left=old?.querySelector?.('.aam-aff-list')?.scrollTop??0;
+   const right=old?.querySelector?.('.aam-main-scroll')?.scrollTop??0;
+   const node=await AffinityDashboard.prototype._renderHTML.call(view);
+   view._resize?.disconnect();
+   view.host.replaceChildren(node);
+   AffinityDashboard.prototype._bindActions.call(view,node);
+   const list=node.querySelector('.aam-aff-list'),main=node.querySelector('.aam-main-scroll');
+   if(list)list.scrollTop=left;
+   if(main)main.scrollTop=right;
+  };
+  inlineViews.set(app,view);
+ }
+ view.host=host;
+ prior.refresh=()=>{if(view.host?.isConnected!==false)return view.render();};
+ prior.dispose=()=>{view._resize?.disconnect();view.host=null;inlineViews.delete(app);};
+ return view.render();
+}
+const sheetTabs=registerAffinitySheetTabs({mount:mountInlineAffinity,isCharacter:isActor,canView:ownership});
+
 let dashboard=null;
 async function open({actor=null,affinity=null}={}){
   if(!visibleActors().length) {
@@ -285,20 +334,7 @@ Hooks.once('init',()=>{
  game.modules.get(MODULE_ID).api={open,grantAffinity:grant,removeAffinity:removeKnown,useSelected:activate,syncFeatures:reconcileFeatures,resetUses,getProgress:profile,getCatalog:()=>AFFINITIES};
 });
 Hooks.once('ready',()=>{if(game.system?.id!=='dnd5e')warn('Averis Affinity Manager requires the D&D 5e system.');game.socket?.on(SOCKET,msg=>void handleRequest(msg).catch(err));});
-Hooks.on('getHeaderControlsApplicationV2',(app,controls)=>{
-  const actor=app.actor??app.document;
-  if(!isActor(actor)||!ownership(actor))return;
-  // Foundry V14 requires action to be an identifier and onClick to be the handler.
-  // The prior function-valued "action" rendered a menu entry that did nothing.
-  if(controls.some(control=>control.action==='averisAffinityOpen'))return;
-  controls.unshift({
-    action:'averisAffinityOpen',
-    icon:'fas fa-gem',
-    label:'Affinity Manager',
-    onClick:()=>openSafe({actor})
-  });
-});
-Hooks.on('updateActor',a=>{if(dashboard?.rendered&&a.id===dashboard.actorId)void dashboard.render({force:true}).catch(err);});
+Hooks.on('updateActor',a=>{if(dashboard?.rendered&&a.id===dashboard.actorId)void dashboard.render({force:true}).catch(err);sheetTabs.refreshActor(a);});
 
 Hooks.on('deleteItem',(item,options={},userId)=>{
  if(!item?.parent||item.parent.documentName!=='Actor'||options?.averisAffinityManagedSync)return;
