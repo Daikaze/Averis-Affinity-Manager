@@ -83,7 +83,7 @@ test('normal feature synchronization upgrades old art without deleting it or rep
  assert.equal((await syncActorFeatures(actor,state)).upgraded,0);
 });
 test('a manually removed Feature is never recreated by artwork refresh',async()=>{
- const state=gmSetLevel(grantAffinity(emptyState(),'blood'),'blood',3);
+ const state=gmSetLevel(grantAffinity(emptyState(),'blood',{source:'gm-special'}),'blood',3);
  state.suppressedFeatures=['blood:2'];
  const items=[{...createFeatureData('blood',1),id:'one',img:'icons/svg/aura.svg'},
               {...createFeatureData('blood',3),id:'three',img:'icons/svg/aura.svg'}];
