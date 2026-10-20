@@ -42,7 +42,10 @@ export function registerAffinitySheetTabs({
       title:"Affinity",
       iconClass:"fa-solid fa-gem",
       html:'<div class="aam-window aam-embedded aam-tidy-host" data-aam-inline-host></div>',
-      enabled:context=>canView(context?.actor??context?.document??context?.sheet?.actor),
+      enabled:context=>{
+        const actor=context?.actor??context?.document??context?.sheet?.actor;
+        return actor?canView(actor):true;
+      },
       onRender:params=>{
         const host=params?.tabContentsElement?.querySelector?.("[data-aam-inline-host]")
              ??(params?.tabContentsElement?.matches?.("[data-aam-inline-host]")?params.tabContentsElement:null);
@@ -119,10 +122,12 @@ export function registerAffinitySheetTabs({
   }
   hooks.on("renderCharacterActorSheet",ensureCoreTab);
   hooks.on("renderActorSheetV2",ensureCoreTab);
-  hooks.on("closeCharacterActorSheet",app=>{
+  const onClose=app=>{
     installed.get(app)?.dispose?.();
     installed.delete(app);active.delete(app);
-  });
+  };
+  hooks.on("closeCharacterActorSheet",onClose);
+  hooks.on("closeActorSheetV2",onClose);
   const refreshActor=actor=>{
     for(const app of active){
       if(installed.get(app)?.actorId!==actor.id)continue;
