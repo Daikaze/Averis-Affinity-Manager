@@ -283,14 +283,19 @@ function mountInlineAffinity({app,actor,host,prior}){
   view.tab='abilities';
   view._resize=null;
   view.host=host;
+  view._generation=0;
   view.render=async()=>{
    if(!view.host)return;
-   const old=view.host.querySelector?.('.aam-shell');
+   const generation=++view._generation;
+   const mountTarget=view.host;
+   const old=mountTarget.querySelector?.('.aam-shell');
    const left=old?.querySelector?.('.aam-aff-list')?.scrollTop??0;
    const right=old?.querySelector?.('.aam-main-scroll')?.scrollTop??0;
    const node=await AffinityDashboard.prototype._renderHTML.call(view);
+   // Discard a stale async render after a tab switch or actor update.
+   if(generation!==view._generation||view.host!==mountTarget)return;
    view._resize?.disconnect();
-   view.host.replaceChildren(node);
+   mountTarget.replaceChildren(node);
    AffinityDashboard.prototype._bindActions.call(view,node);
    const list=node.querySelector('.aam-aff-list'),main=node.querySelector('.aam-main-scroll');
    if(list)list.scrollTop=left;
@@ -300,7 +305,7 @@ function mountInlineAffinity({app,actor,host,prior}){
  }
  view.host=host;
  prior.refresh=()=>{if(view.host?.isConnected!==false)return view.render();};
- prior.dispose=()=>{view._resize?.disconnect();view.host=null;inlineViews.delete(app);};
+ prior.dispose=()=>{view._generation++;view._resize?.disconnect();view.host=null;inlineViews.delete(app);};
  return view.render();
 }
 const sheetTabs=registerAffinitySheetTabs({mount:mountInlineAffinity,isCharacter:isActor,canView:ownership});
