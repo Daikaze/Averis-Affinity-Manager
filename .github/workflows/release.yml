@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/**'
       - 'styles/**'
+      - 'assets/**'
       - 'tests/**'
       - 'module.json'
       - '.github/workflows/release.yml'
@@ -26,6 +27,8 @@ jobs:
           node --check scripts/catalog.mjs
           node --check scripts/engine.mjs
           node --check scripts/redact.mjs
+          node --check scripts/features.mjs
+          node --check scripts/feature-icons.mjs
           node --test tests/*.test.mjs
       - name: Validate manifest and package
         run: |
@@ -42,8 +45,9 @@ jobs:
           PY
           VERSION=$(python3 -c 'import json;print(json.load(open("module.json"))["version"])')
           echo "AAM_VERSION=$VERSION" >> "$GITHUB_ENV"
-          zip -q -r "averis-affinity-manager-v${VERSION}.zip" module.json scripts styles README.md START_HERE_BG.md
+          zip -q -r "averis-affinity-manager-v${VERSION}.zip" module.json scripts styles assets README.md START_HERE_BG.md
           unzip -t "averis-affinity-manager-v${VERSION}.zip"
+          test "$(find assets/affinity-icons -type f -name '*.svg' | wc -l)" -eq 65
       - name: Publish versioned Affinity Manager release
         env:
           GH_TOKEN: ${{ github.token }}
