@@ -1,3 +1,20 @@
+# Averis Affinity Manager v0.3.0 — ТАБ В CHARACTER SHEET
+
+Вече отваряш **Affinity** като самостоятелен таб до Features / Spellbook / Inventory в Character Sheet.
+
+- **Tidy 5e:** директен таб чрез официалния Tidy API. Ако имаш custom избор на табове, в Tidy Sheet Settings включи Affinity.
+- **Стандартен D&D 5e sheet:** нов Affinity таб до Features.
+- Вътре остават всички действия: Abilities, Training, History, Learn, Remove, GM Rolls, Level, Cooldown, Use/Share, Restore Features.
+- Играчът вижда само собствения герой. Числовите DC и GM бутоните са само за GM.
+- Отваряне от менюто с трите точки вече не е необходимо. Alt+A е оставено само като резервен вариант.
+- Прогресията от предишните версии се запазва.
+
+**Foundry:** V14 / D&D 5e 5.3.3.
+
+**Manifest:** https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json
+
+Направи backup на света преди обновяване и презареди клиента с Ctrl+F5.
+
 # Averis Affinity Manager v0.1.1 — инструкции
 
 - Foundry VTT V14; D&D 5e 5.3.3. Направи backup на света.

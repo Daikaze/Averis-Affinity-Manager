@@ -1,3 +1,16 @@
+## v0.3.0 — Dedicated Character Sheet Affinity tab
+
+- **Tidy 5e Sheet (13.10.x / dnd5e 5.3.3 / Foundry V14):** uses the official `tidy5e-sheet.ready` API and `registerCharacterTab` with a custom **Affinity** tab. It appears alongside Inventory, Features and Spellbook in the character sheet navigation.
+- **Standard D&D 5e Character Sheet:** adds **Affinity** beside Features with a tab-scoped view; the other tabs, D&D data and standard components are not modified or overwritten.
+- The Affinity tab has the full **Abilities**, **Training**, **History**, available Affinities, progression, Use/Share and the complete **GM Controls**, including Grant, Remove, Set Level, Roll/Record, cooldown and Restore Features.
+- Each character sheet is tied to its **own Actor**: players cannot switch to another character using the Affinity tab. Only the GM sees numeric upgrade DCs or GM actions.
+- **No more header three-dot Affinity Manager action** on character sheets. The original independent window is retained as an optional fallback through Alt+A or the module API.
+- The embedded layout is responsive and scrolls internally so it does not require a very tall character sheet. Each sheet retains its tab and selected affinity while open.
+- Prevents cross-tab clicks from triggering D&D 5e's native actions, duplicates of our tab, and stale async UI after rapid character updates.
+- The Actor flags, progression, manual Feature removals, native D&D Activities and existing skill rules remain unchanged.
+
+**Tidy user tip:** If you previously customized the visible Tidy tabs, open the sheet's **Configure Sheet / Tidy Sheet Settings → Tabs** and enable **Affinity** (new custom tabs may not automatically appear in a previously saved custom tab list). Reopen the sheet after installing this version.
+
 ## v0.2.1 — D&D 5e Activity ID compliance
 
 Every generated D&D 5e 5.3.3 Activity and linked Active Effect now uses an explicitly verified 16-character Foundry document ID. This prevents invalid or silently discarded activities. Version v0.2.1 supersedes the v0.2.0 playtest package.
