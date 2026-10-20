@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Poison Affinity ability level 1">
+<title>Poison Affinity · Level I</title>
+<defs>
+ <radialGradient id="bg" cx="30%" cy="22%" r="92%"><stop stop-color="#303b56"/><stop offset=".55" stop-color="#161e31"/><stop offset="1" stop-color="#0b111f"/></radialGradient>
+ <linearGradient id="core" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf0"/><stop offset=".32" stop-color="#9ad16d"/><stop offset="1" stop-color="#9ad16d" stop-opacity=".64"/></linearGradient>
+ <radialGradient id="halo"><stop stop-color="#9ad16d" stop-opacity=".32"/><stop offset="1" stop-color="#9ad16d" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="128" height="128" rx="18" fill="url(#bg)"/>
+<rect x="3" y="3" width="122" height="122" rx="16" fill="none" stroke="#9ad16d" stroke-opacity=".78" stroke-width="2"/>
+<circle cx="64" cy="59" r="59" fill="url(#halo)"/>
+<circle cx="64" cy="59" r="48" fill="none" stroke="#9ad16d" stroke-opacity=".25" stroke-width="1.8"/>
+<circle cx="64" cy="59" r="43" fill="none" stroke="#9ad16d" stroke-opacity=".43" stroke-dasharray="4 8" stroke-width="1"/>
+<path d="M114.57 65.61 L119.53 66.26" stroke="#9ad16d" stroke-opacity=".48" stroke-width="1.7"/><path d="M95.08 99.43 L98.13 103.40" stroke="#9ad16d" stroke-opacity=".48" stroke-width="1.7"/><path d="M57.39 109.57 L56.74 114.53" stroke="#9ad16d" stroke-opacity=".48" stroke-width="1.7"/><path d="M23.57 90.08 L19.60 93.13" stroke="#9ad16d" stroke-opacity=".48" stroke-width="1.7"/><path d="M13.43 52.39 L8.47 51.74" stroke="#9ad16d" stroke-opacity=".48" stroke-width="1.7"/><path d="M32.92 18.57 L29.87 14.60" stroke="#9ad16d" stroke-opacity=".48" stroke-width="1.7"/><path d="M70.61 8.43 L71.26 3.47" stroke="#9ad16d" stroke-opacity=".48" stroke-width="1.7"/><path d="M104.43 27.92 L108.40 24.87" stroke="#9ad16d" stroke-opacity=".48" stroke-width="1.7"/>
+<g transform="translate(64 58) scale(0.927)"><path d="M-13 -37 H13 M-8 -37 V-16 L-29 16 Q-35 28 -20 33 H20 Q35 28 29 16 L8 -16 V-37" fill="none" stroke="#f5ffda" stroke-width="5" stroke-linejoin="round"/><path d="M-22 14 Q0 3 22 14 L26 24 17 30 H-17 L-26 24Z" fill="url(#core)"/><circle cx="-8" cy="18" r="4" fill="#ffffff"/><circle cx="10" cy="22" r="3" fill="#fff"/></g>
+<circle cx="24.16" cy="87.00" r="3.3" fill="#9ad16d" stroke="#fff" stroke-width=".6"/>
+<path d="M33 109 Q64 103 95 109" fill="none" stroke="#9ad16d" stroke-opacity=".62"/>
+<rect x="47" y="107" width="34" height="15" rx="7" fill="#101a2b" stroke="#9ad16d" stroke-opacity=".83"/>
+<text x="64" y="118" font-size="10" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" fill="#fff7e8">I</text>
+</svg>

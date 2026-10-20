@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Force Affinity ability level 3">
+<title>Force Affinity · Level III</title>
+<defs>
+ <radialGradient id="bg" cx="30%" cy="22%" r="92%"><stop stop-color="#303b56"/><stop offset=".55" stop-color="#161e31"/><stop offset="1" stop-color="#0b111f"/></radialGradient>
+ <linearGradient id="core" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf0"/><stop offset=".32" stop-color="#a3baff"/><stop offset="1" stop-color="#a3baff" stop-opacity=".64"/></linearGradient>
+ <radialGradient id="halo"><stop stop-color="#a3baff" stop-opacity=".32"/><stop offset="1" stop-color="#a3baff" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="128" height="128" rx="18" fill="url(#bg)"/>
+<rect x="3" y="3" width="122" height="122" rx="16" fill="none" stroke="#a3baff" stroke-opacity=".78" stroke-width="2"/>
+<circle cx="64" cy="59" r="59" fill="url(#halo)"/>
+<circle cx="64" cy="59" r="48" fill="none" stroke="#a3baff" stroke-opacity=".25" stroke-width="1.8"/>
+<circle cx="64" cy="59" r="43" fill="none" stroke="#a3baff" stroke-opacity=".43" stroke-dasharray="4 8" stroke-width="1"/>
+<path d="M111.17 78.39 L115.79 80.29" stroke="#a3baff" stroke-opacity=".48" stroke-width="1.7"/><path d="M83.64 106.07 L85.57 110.68" stroke="#a3baff" stroke-opacity=".48" stroke-width="1.7"/><path d="M44.61 106.17 L42.71 110.79" stroke="#a3baff" stroke-opacity=".48" stroke-width="1.7"/><path d="M16.93 78.64 L12.32 80.57" stroke="#a3baff" stroke-opacity=".48" stroke-width="1.7"/><path d="M16.83 39.61 L12.21 37.71" stroke="#a3baff" stroke-opacity=".48" stroke-width="1.7"/><path d="M44.36 11.93 L42.43 7.32" stroke="#a3baff" stroke-opacity=".48" stroke-width="1.7"/><path d="M83.39 11.83 L85.29 7.21" stroke="#a3baff" stroke-opacity=".48" stroke-width="1.7"/><path d="M111.07 39.36 L115.68 37.43" stroke="#a3baff" stroke-opacity=".48" stroke-width="1.7"/>
+<g transform="translate(64 58) scale(0.961)"><circle r="31" fill="none" stroke="url(#core)" stroke-width="6"/><circle r="19" fill="none" stroke="#eff4ff" stroke-width="3"/><circle r="8" fill="#e4ecff"/><path d="M-38 -8 L-24 -8 M24 8 L38 8 M-8 -38 V-24 M8 24 V38" stroke="#f3f6ff" stroke-width="4" stroke-linecap="round"/></g>
+<circle cx="24.16" cy="87.00" r="3.3" fill="#a3baff" stroke="#fff" stroke-width=".6"/><circle cx="64.00" cy="18.00" r="3.3" fill="#a3baff" stroke="#fff" stroke-width=".6"/><circle cx="103.84" cy="87.00" r="3.3" fill="#a3baff" stroke="#fff" stroke-width=".6"/>
+<path d="M33 109 Q64 103 95 109" fill="none" stroke="#a3baff" stroke-opacity=".62"/>
+<rect x="47" y="107" width="34" height="15" rx="7" fill="#101a2b" stroke="#a3baff" stroke-opacity=".83"/>
+<text x="64" y="118" font-size="10" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" fill="#fff7e8">III</text>
+</svg>

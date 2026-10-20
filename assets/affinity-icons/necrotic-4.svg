@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Necrotic Affinity ability level 4">
+<title>Necrotic Affinity · Level IV</title>
+<defs>
+ <radialGradient id="bg" cx="30%" cy="22%" r="92%"><stop stop-color="#303b56"/><stop offset=".55" stop-color="#161e31"/><stop offset="1" stop-color="#0b111f"/></radialGradient>
+ <linearGradient id="core" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf0"/><stop offset=".32" stop-color="#b29acb"/><stop offset="1" stop-color="#b29acb" stop-opacity=".64"/></linearGradient>
+ <radialGradient id="halo"><stop stop-color="#b29acb" stop-opacity=".32"/><stop offset="1" stop-color="#b29acb" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="128" height="128" rx="18" fill="url(#bg)"/>
+<rect x="3" y="3" width="122" height="122" rx="16" fill="none" stroke="#b29acb" stroke-opacity=".78" stroke-width="2"/>
+<circle cx="64" cy="59" r="59" fill="url(#halo)"/>
+<circle cx="64" cy="59" r="48" fill="none" stroke="#b29acb" stroke-opacity=".25" stroke-width="1.8"/>
+<circle cx="64" cy="59" r="43" fill="none" stroke="#b29acb" stroke-opacity=".43" stroke-dasharray="4 8" stroke-width="1"/>
+<path d="M108.26 84.34 L112.60 86.83" stroke="#b29acb" stroke-opacity=".48" stroke-width="1.7"/><path d="M77.38 108.21 L78.69 113.04" stroke="#b29acb" stroke-opacity=".48" stroke-width="1.7"/><path d="M38.66 103.26 L36.17 107.60" stroke="#b29acb" stroke-opacity=".48" stroke-width="1.7"/><path d="M14.79 72.38 L9.96 73.69" stroke="#b29acb" stroke-opacity=".48" stroke-width="1.7"/><path d="M19.74 33.66 L15.40 31.17" stroke="#b29acb" stroke-opacity=".48" stroke-width="1.7"/><path d="M50.62 9.79 L49.31 4.96" stroke="#b29acb" stroke-opacity=".48" stroke-width="1.7"/><path d="M89.34 14.74 L91.83 10.40" stroke="#b29acb" stroke-opacity=".48" stroke-width="1.7"/><path d="M113.21 45.62 L118.04 44.31" stroke="#b29acb" stroke-opacity=".48" stroke-width="1.7"/>
+<g transform="translate(64 58) scale(0.978)"><path d="M14 -38 A35 35 0 1 0 26 25 Q-13 32 -13 -7 Q-15 -30 14 -38Z" fill="url(#core)" stroke="#e9d9ff" stroke-width="3"/><path d="M-18 4 Q0 -16 18 4 L12 22 -11 22Z" fill="#130f25" stroke="#d6b4f3" stroke-width="2"/><circle cx="-8" cy="6" r="4" fill="#eedbfa"/><circle cx="8" cy="6" r="4" fill="#eedbfa"/></g>
+<circle cx="24.16" cy="87.00" r="3.3" fill="#b29acb" stroke="#fff" stroke-width=".6"/><circle cx="34.43" cy="28.76" r="3.3" fill="#b29acb" stroke="#fff" stroke-width=".6"/><circle cx="93.57" cy="28.76" r="3.3" fill="#b29acb" stroke="#fff" stroke-width=".6"/><circle cx="103.84" cy="87.00" r="3.3" fill="#b29acb" stroke="#fff" stroke-width=".6"/>
+<path d="M33 109 Q64 103 95 109" fill="none" stroke="#b29acb" stroke-opacity=".62"/>
+<rect x="47" y="107" width="34" height="15" rx="7" fill="#101a2b" stroke="#b29acb" stroke-opacity=".83"/>
+<text x="64" y="118" font-size="10" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" fill="#fff7e8">IV</text>
+</svg>

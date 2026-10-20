@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Fire Affinity ability level 2">
+<title>Fire Affinity · Level II</title>
+<defs>
+ <radialGradient id="bg" cx="30%" cy="22%" r="92%"><stop stop-color="#303b56"/><stop offset=".55" stop-color="#161e31"/><stop offset="1" stop-color="#0b111f"/></radialGradient>
+ <linearGradient id="core" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf0"/><stop offset=".32" stop-color="#ec7754"/><stop offset="1" stop-color="#ec7754" stop-opacity=".64"/></linearGradient>
+ <radialGradient id="halo"><stop stop-color="#ec7754" stop-opacity=".32"/><stop offset="1" stop-color="#ec7754" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="128" height="128" rx="18" fill="url(#bg)"/>
+<rect x="3" y="3" width="122" height="122" rx="16" fill="none" stroke="#ec7754" stroke-opacity=".78" stroke-width="2"/>
+<circle cx="64" cy="59" r="59" fill="url(#halo)"/>
+<circle cx="64" cy="59" r="48" fill="none" stroke="#ec7754" stroke-opacity=".25" stroke-width="1.8"/>
+<circle cx="64" cy="59" r="43" fill="none" stroke="#ec7754" stroke-opacity=".43" stroke-dasharray="4 8" stroke-width="1"/>
+<path d="M113.29 72.11 L118.12 73.40" stroke="#ec7754" stroke-opacity=".48" stroke-width="1.7"/><path d="M89.58 103.12 L92.09 107.45" stroke="#ec7754" stroke-opacity=".48" stroke-width="1.7"/><path d="M50.89 108.29 L49.60 113.12" stroke="#ec7754" stroke-opacity=".48" stroke-width="1.7"/><path d="M19.88 84.58 L15.55 87.09" stroke="#ec7754" stroke-opacity=".48" stroke-width="1.7"/><path d="M14.71 45.89 L9.88 44.60" stroke="#ec7754" stroke-opacity=".48" stroke-width="1.7"/><path d="M38.42 14.88 L35.91 10.55" stroke="#ec7754" stroke-opacity=".48" stroke-width="1.7"/><path d="M77.11 9.71 L78.40 4.88" stroke="#ec7754" stroke-opacity=".48" stroke-width="1.7"/><path d="M108.12 33.42 L112.45 30.91" stroke="#ec7754" stroke-opacity=".48" stroke-width="1.7"/>
+<g transform="translate(64 58) scale(0.944)"><path d="M-19 23 Q-32 2 -15 -22 Q-17 -1 -4 -21 Q0 -28 0 -36 Q32 -7 23 19 Q16 32 -2 33 Q-22 32 -19 23Z" fill="url(#core)" stroke="#fff4d9" stroke-width="2.5"/><path d="M-9 21 Q-18 8 -4 -7 Q-2 6 5 -7 Q20 18 5 24 Q-5 28 -9 21Z" fill="#fff5cd" opacity=".83"/></g>
+<circle cx="24.16" cy="87.00" r="3.3" fill="#ec7754" stroke="#fff" stroke-width=".6"/><circle cx="103.84" cy="87.00" r="3.3" fill="#ec7754" stroke="#fff" stroke-width=".6"/>
+<path d="M33 109 Q64 103 95 109" fill="none" stroke="#ec7754" stroke-opacity=".62"/>
+<rect x="47" y="107" width="34" height="15" rx="7" fill="#101a2b" stroke="#ec7754" stroke-opacity=".83"/>
+<text x="64" y="118" font-size="10" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" fill="#fff7e8">II</text>
+</svg>
