@@ -2,6 +2,7 @@ import {AFFINITY_MAP} from './catalog.mjs';
 import {MODULE_ID,normalizeState} from './engine.mjs';
 import {redactDC} from './redact.mjs';
 import {makeActivityBundle,makeActiveEffects} from './activities.mjs';
+import {featureIconPath,isLegacyAffinityIcon} from './feature-icons.mjs';
 
 export const FEATURE_FLAG='managedFeature';
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -29,7 +30,7 @@ export function createFeatureData(id,level) {
   return {
     name:`${affinity.name} Affinity — ${ability.title}`,
     type:'feat',
-    img:'icons/svg/aura.svg',
+    img:featureIconPath(id,level),
     system:{
       description:{value:featureHTML(affinity,ability)},
       activities
@@ -100,13 +101,21 @@ export async function syncActorFeatures(actor,progress,options={}){
   const key=getOwnedFeatureIdentity(item);
   if(!key||deleted.has(item.id))continue;
   if(options.affinityId&&!key.startsWith(options.affinityId+':'))continue;
-  if(typeof item.system?.activities?.get==='function' && item.system.activities.get('affinityActivate'))continue;
-  if(item.system?.activities?.affinityActivate)continue;
+  const hasUtility=typeof item.system?.activities?.get==='function'
+    ? !!item.system.activities.get('affinityActivate')
+    : !!item.system?.activities?.affinityActivate;
+  const legacyIcon=isLegacyAffinityIcon(item.img);
+  if(hasUtility&&!legacyIcon)continue;
   const [id,level]=key.split(':');
-  const original=createFeatureData(id,Number(level));
-  const existing=item.system?.activities;
-  const raw=existing?.toObject?.()??(existing&&typeof existing==='object'&&!Array.isArray(existing)?existing:{});
-  upgrades.push({_id:item.id,'system.activities':{...raw,...original.system.activities}});
+  const update={_id:item.id};
+  if(legacyIcon)update.img=featureIconPath(id,Number(level));
+  if(!hasUtility){
+    const original=createFeatureData(id,Number(level));
+    const existing=item.system?.activities;
+    const raw=existing?.toObject?.()??(existing&&typeof existing==='object'&&!Array.isArray(existing)?existing:{});
+    update['system.activities']={...raw,...original.system.activities};
+  }
+  upgrades.push(update);
  }
  if(plan.deleteIds.length)await actor.deleteEmbeddedDocuments('Item',plan.deleteIds,{averisAffinityManagedSync:true});
  if(upgrades.length){
@@ -115,4 +124,25 @@ export async function syncActorFeatures(actor,progress,options={}){
  }
  if(plan.creates.length)await actor.createEmbeddedDocuments('Item',plan.creates,{averisAffinityManagedSync:true});
  return {created:plan.creates.length,deleted:plan.deleteIds.length,expectedCount:plan.expectedCount,upgraded:upgrades.length};
+}
+
+/** Repair only the placeholder icon on EXISTING module-created Features.
+ * Never re-add missing Items, edit custom icons, or change Activities.
+ */
+export function planAffinityIconUpdates(items=[]){
+ const updates=[];
+ for(const item of items??[]){
+  if(!item?.id||!isLegacyAffinityIcon(item.img))continue;
+  const key=getOwnedFeatureIdentity(item);
+  if(!key)continue;
+  const [id,level]=key.split(':');
+  updates.push({_id:item.id,img:featureIconPath(id,Number(level))});
+ }
+ return updates;
+}
+export async function syncActorAffinityIcons(actor){
+ if(!actor||typeof actor.updateEmbeddedDocuments!=='function')throw Error('Actor cannot update Item artwork.');
+ const updates=planAffinityIconUpdates(actor.items?.contents??[]);
+ if(updates.length)await actor.updateEmbeddedDocuments('Item',updates,{averisAffinityManagedSync:true});
+ return updates.length;
 }
