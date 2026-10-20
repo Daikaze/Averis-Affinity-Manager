@@ -1,3 +1,11 @@
+## v0.3.1 — Unique Feature artwork for all 65 Affinity abilities
+
+- Every newly unlocked Affinity ability at Levels 1–5 now receives its own **element-themed SVG icon** in **Character Sheet → Features**. There are 65 bundled images across 13 Affinities, including Blood; icons also show a small tier mark (I–V).
+- Existing module-managed D&D Feats still using the old `icons/svg/aura.svg` placeholder receive **an image-only upgrade**, automatically when the GM opens that character's Affinity tab. The existing Items retain their IDs, activities, progression, uses and other properties.
+- Images chosen manually by the GM are never overwritten. Features deleted manually are not recreated and other modules' Items are ignored.
+- This works with the native D&D 5e 5.3.3 and Tidy character sheet integrations. All images are included in the release ZIP, so there are no external image dependencies.
+- The module includes automated coverage for all 65 image assets, migration, idempotency, permissions, preserving manually changed images, and missing Feature suppression.
+
 ## v0.3.0 — Dedicated Character Sheet Affinity tab
 
 - **Tidy 5e Sheet (13.10.x / dnd5e 5.3.3 / Foundry V14):** uses the official `tidy5e-sheet.ready` API and `registerCharacterTab` with a custom **Affinity** tab. It appears alongside Inventory, Features and Spellbook in the character sheet navigation.
