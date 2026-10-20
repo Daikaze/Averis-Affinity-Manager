@@ -118,3 +118,79 @@
   outline-offset: 1px !important;
 }
 .aam-dialog option {background: #23344b !important; color:#fff !important;}
+
+
+/* v0.3.0 — native Affinity tab in Tidy 5e and dnd5e Character Sheet */
+.aam-embedded {
+  --aam-t:#e7edf9;
+  --aam-muted:#93a4bb;
+  --aam-line:#2b3a50;
+  --aam-bg:#0d121d;
+  --aam-panel:#141d2b;
+  display:block;
+  width:100%;
+  min-width:0;
+  height:clamp(450px,70vh,780px);
+  color:var(--aam-t);
+  color-scheme:dark;
+  font-family:Inter,"Segoe UI",sans-serif;
+  isolation:isolate;
+  border:1px solid #344760;
+  border-radius:12px;
+  overflow:hidden;
+}
+.aam-embedded .aam-shell {
+  position:relative;
+  min-width:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-height:100%!important;
+}
+.aam-embedded .aam-top {flex-shrink:0;}
+.aam-embedded .aam-layout {min-height:0;}
+.aam-embedded .aam-actor-static{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  min-height:33px;
+  padding:8px 10px;
+  margin:9px 0;
+  border:1px solid #465973;
+  border-radius:8px;
+  background:#24324a;
+  color:#f2f4fa;
+  font-size:13px;
+  font-weight:720;
+  overflow-wrap:anywhere;
+}
+.aam-embedded .aam-actor-static i {color:#e1c88b;}
+.aam-embedded .aam-sidebar-head {padding:11px 12px 10px;}
+.aam-embedded .aam-top {height:68px;min-height:68px;padding:12px 18px;}
+.aam-embedded .aam-aff-hero{min-height:100px;padding:14px 19px;}
+.aam-embedded .aam-hero-icon{width:61px;height:61px;border-radius:15px;font-size:25px;}
+.aam-embedded .aam-hero-content h2{font-size:25px;}
+.aam-embedded .aam-main-scroll {padding:12px 15px 18px;}
+.aam-embedded .aam-cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,225px),1fr));}
+.aam-embedded .aam-shell button{min-width:0;}
+.aam-embedded .aam-main,.aam-embedded .aam-sidebar {min-height:0;}
+.aam-embedded .aam-bottom{max-height:190px;overflow-y:auto;}
+.aam-embedded .aam-footer{margin-top:5px;}
+.aam-embedded .aam-footer>span:last-child{display:none;}
+.aam-core-link {cursor:pointer;}
+.aam-core-link span {font-size:10px;display:block;}
+.aam-core-body {width:100%;min-width:0;padding:6px 8px 12px;overflow:auto;}
+.aam-core-body[hidden] {display:none!important;}
+.aam-core-selected .tab-body#tabs > :not([data-aam-tab-body]) {display:none!important;}
+.aam-core-selected .tab-body#tabs {display:block!important;min-width:0;}
+@media(max-width:770px){
+ .aam-embedded{height:min(660px,75vh);min-height:440px;}
+ .aam-embedded .aam-top-status{display:none;}
+}
+@media(max-width:540px){
+ .aam-embedded {min-height:410px;}
+ .aam-embedded .aam-top{height:58px;min-height:58px;padding:9px;}
+ .aam-embedded .aam-ability{padding:10px;}
+ .aam-embedded .aam-gm-actions{gap:5px;}
+ .aam-embedded .aam-gm-actions button{padding:7px 9px!important;}
+}
