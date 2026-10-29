@@ -52,7 +52,7 @@ test('Tidy tab renders for its own character, never another character or an NPC'
  hooks.get('closeActorSheetV2')(app);
  assert.ok(events.includes('dispose'));
 });
-test('standard V14 character sheet adds Affinity beside Features, preserves other tabs',()=>{
+test('standard dnd5e 6.0.6 V14 character sheet adds Affinity beside Features, preserves other tabs',()=>{
  let featureActive=true,coreLink=null,wrapper=null;
  const feature={
   classList:{remove(name){if(name==='active')featureActive=false;}},
