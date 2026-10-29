@@ -1,3 +1,12 @@
+## v0.3.2 — D&D 5e 6.0.6 / Foundry v14
+
+- Съвместимост: **Foundry VTT v14 (build 14.367+)** и **D&D 5e 6.0.6**.
+- Запазени са всички 65 Affinity способности и иконките им, progress на героите, GM DC проверките и cooldown системата.
+- Поправено е **Use / Share**: ако излезеш от Activity, без да го изпълниш, не се отчита използване.
+- В стандартния Character Sheet Affinity остава собствен таб. За Tidy е нужна версия на Tidy, която поддържа D&D 5e 6.x.
+- Направи backup на света, обнови модула и презареди Foundry. Провери един герой с GM и Player профил.
+- Manifest: https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json
+
 ## v0.3.1 — Иконки в Character Sheet → Features
 
 Всяка Affinity способност от Level 1 до Level 5 получава собствена цветна иконка. Общо **65 SVG иконки** за 13 Affinities.
@@ -19,7 +28,7 @@
 - Отваряне от менюто с трите точки вече не е необходимо. Alt+A е оставено само като резервен вариант.
 - Прогресията от предишните версии се запазва.
 
-**Foundry:** V14 / D&D 5e 5.3.3.
+**Оригинална съвместимост на v0.3.0:** V14 / D&D 5e 5.3.3.
 
 **Manifest:** https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json
 
