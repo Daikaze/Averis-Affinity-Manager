@@ -5,6 +5,7 @@ import {grantAffinity,gmSetLevel,emptyState} from '../scripts/engine.mjs';
 import {createFeatureData} from '../scripts/features.mjs';
 
 const callbacks=new Map(),calls=[],notifications=[];
+let activityUseResult={id:'usage-message'};
 let progress=gmSetLevel(grantAffinity(emptyState(),'fire'),'fire',1);
 progress=gmSetLevel(grantAffinity(progress,'earth'),'earth',1);
 const stored=[];
@@ -22,7 +23,7 @@ function addFeature(id,level){
  const item=createFeatureData(id,level);
  item.id=id+'-'+level;
  item.system.activities={
-  get(key){if(key==='affinityStrike01' ||key==='affinityActivate')return {use:async()=>{calls.push(id+':'+level);return {id:'message'};}};return null;}
+  get(key){if(key==='affinityStrike01' ||key==='affinityActivate')return {use:async()=>{calls.push(id+':'+level);return activityUseResult;}};return null;}
  };
  stored.push(item);return item;
 }
@@ -42,6 +43,15 @@ test('Use/Share executes ONLY the requested Activity; leaves the other learned F
  assert.deepEqual(stored.map(x=>x.id),['fire-1','earth-1']);
  assert.equal(progress.usage['fire:1']??0,0); // Unlimited use is tracked as history only.
  assert.equal(progress.history.at(-1).id,'fire');
+});
+test('Cancelled D&D5e 6.0.6 activity does not consume uses or add history',async()=>{
+ const beforeHistory=progress.history.length;
+ const beforeUsage=structuredClone(progress.usage);
+ activityUseResult=undefined;
+ try{await api.useSelected(actor,'fire',1);}
+ finally{activityUseResult={id:'usage-message'};}
+ assert.equal(progress.history.length,beforeHistory);
+ assert.deepEqual(progress.usage,beforeUsage);
 });
 test('Missing manually removed Feature does NOT recreate another Affinity by using it',async()=>{
  const removed=stored.splice(1,1)[0];
