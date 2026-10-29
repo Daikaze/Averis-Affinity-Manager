@@ -1,3 +1,12 @@
+## v0.3.2 — Foundry V14 / D&D 5e 6.0.6 compatibility
+
+- **Supported environment:** Foundry V14 build 14.367+ (generation 14) with **D&D 5e 6.0.6**. The manifest and regression checks now target this system version.
+- Checked against the upstream 6.0.6 character-sheet structure and native Activity model. The standard sheet keeps its Affinity tab, while Tidy integration continues through Tidy's public tab API (requires a Tidy build compatible with D&D 6.x).
+- Fixed **Use / Share** so a cancelled native Activity does not record a completed use or decrement the Affinity counter.
+- All 65 ability definitions, linked native Features and original SVG artwork, independent player progress, GM-only DCs, and the 3-day/7-day training clock remain unchanged.
+- No Actor-flag migration is needed. Existing saved Affinities and manually deleted/suppressed Features remain intact. Back up the world before upgrading D&D5e.
+- **Live-world smoke test recommended:** open a core and (if installed) Tidy character sheet, use an Affinity Activity, cancel an activity, complete training, and confirm GM-only data stays private.
+
 ## v0.3.1 — Unique Feature artwork for all 65 Affinity abilities
 
 - Every newly unlocked Affinity ability at Levels 1–5 now receives its own **element-themed SVG icon** in **Character Sheet → Features**. There are 65 bundled images across 13 Affinities, including Blood; icons also show a small tier mark (I–V).
@@ -53,7 +62,7 @@ Every generated D&D 5e 5.3.3 Activity and linked Active Effect now uses an expli
 
 # Averis Affinity Manager — v0.1.1
 
-Custom Foundry VTT V14 / D&D 5e 5.3.3 **playtest** module implementing Averis Affinity learning, mastery checks and source-specific abilities.
+Original v0.1.1 playtest documentation for a Foundry V14 Affinity module (current support: **D&D 5e 6.0.6**). implementing Averis Affinity learning, mastery checks and source-specific abilities.
 
 ## Install from Manifest URL
 
@@ -63,7 +72,7 @@ Foundry Setup → Add-on Modules → Install Module → Manifest URL:
 https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json
 ```
 
-The trailing `.` in the repository name is intentional. Enable **Averis Affinity Manager** inside your world. Open a character sheet and select **Affinity Manager** from header controls, or use **Alt+A** or a script macro:
+Enable **Averis Affinity Manager** inside your world. Open a character sheet and choose the **Affinity** tab, or use **Alt+A** or a script macro:
 
 ```js
 await game.modules.get("averis-affinity-manager").api.open();
