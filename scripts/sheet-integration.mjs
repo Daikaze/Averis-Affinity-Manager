@@ -65,7 +65,7 @@ export function registerAffinitySheetTabs({
       try{if(tidy.isTidy5eSheet(app))return;}catch{}
     }
     // Official V14 character sheet: nav.tabs[data-group="primary"] and
-    // .tab-body#tabs are defined by dnd5e 5.3.3 CharacterActorSheet.PARTS.
+    // .tab-body#tabs are defined by dnd5e 6.0.6 CharacterActorSheet.PARTS.
     const root=app?.element;
     if(!root?.querySelector)return;
     const nav=root.querySelector('nav.tabs[data-group="primary"]');
