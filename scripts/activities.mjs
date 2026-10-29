@@ -1,5 +1,5 @@
 /**
- * Native D&D5e 5.3.3 Activities built from original Affinity descriptions.
+ * Native D&D5e 6.0.6 Activities built from original Affinity descriptions.
  * All abilities get a usable Utility activity. Unambiguous instant attacks,
  * direct damage, and heals also receive dedicated system Activities.
  *
