@@ -1,3 +1,12 @@
+## v0.3.3 — Native Foundry interface for V14 / 6.0.6
+
+- **Native ApplicationV2** window frame, edge resizing and double-click minimization; compact application title.
+- Replaced forced black-and-gold layout, fixed dark inputs and hardcoded colors with standard Foundry theme buttons, inputs, dropdowns, panels and font colors.
+- Updated both standalone Affinity dashboard and core/Tidy character-sheet Affinity tab; consistent responsive layout in compact windows.
+- **No changes to saved Actors, Affinity progress, Level 1–5 abilities, GM-only DC visibility, uses, world-time cooldowns, native Features or Activity creation.**
+- No other modules' UI is modified. CSS remains scoped to `.aam-window`, `.aam-embedded` and dedicated sheet-tab hooks.
+- Regression tests verify CSS isolation and native controls. Test actual UI interactions in a V14 world with other sheet modules.
+
 ## v0.3.2 — Foundry V14 / D&D 5e 6.0.6 compatibility
 
 - **Supported environment:** Foundry V14 build 14.367+ (generation 14) with **D&D 5e 6.0.6**. The manifest and regression checks now target this system version.

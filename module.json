@@ -1,8 +1,8 @@
 {
   "id": "averis-affinity-manager",
   "title": "Averis Affinity Manager",
-  "description": "Affinity progression for Foundry V14 (14.367+) and D&D 5e 6.0.6 character sheets, with GM-only DCs, 65 canonical abilities and native Activities.",
-  "version": "0.3.2",
+  "description": "Affinity progression for Foundry V14 (14.367+) and D&D 5e 6.0.6 with native Foundry UI, 65 abilities, GM-only DCs and 3/7-day training.",
+  "version": "0.3.3",
   "authors": [
     {
       "name": "Averis Campaign"
@@ -20,7 +20,8 @@
         "type": "system",
         "compatibility": {
           "minimum": "6.0.6",
-          "maximum": "6.0.6"
+          "maximum": "6.0.6",
+          "verified": "6.0.6"
         }
       }
     ]
@@ -34,5 +35,5 @@
   "socket": true,
   "url": "https://github.com/Daikaze/Averis-Affinity-Manager",
   "manifest": "https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json",
-  "download": "https://github.com/Daikaze/Averis-Affinity-Manager/releases/download/affinity-v0.3.2/averis-affinity-manager-v0.3.2.zip"
+  "download": "https://github.com/Daikaze/Averis-Affinity-Manager/releases/download/affinity-v0.3.3/averis-affinity-manager-v0.3.3.zip"
 }
