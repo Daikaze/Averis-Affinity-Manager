@@ -1,3 +1,4 @@
+import {NEW_SPECIAL_AFFINITIES} from './special-affinities.mjs';
 /* Curated verbatim from the user-provided Averis Affinity rules. */
 export const AFFINITIES = Object.freeze([
   {
@@ -791,15 +792,7 @@ export const AFFINITIES = Object.freeze([
         ]
       }
     ]
-  },
-  {
-    "id": "thunder",
-    "name": "Thunder",
-    "special": false,
-    "unavailable": true,
-    "color": "#84b6cc",
-    "icon": "fa-cloud-bolt",
-    "abilities": []
   }
+  ...NEW_SPECIAL_AFFINITIES
 ]);
 export const AFFINITY_MAP = Object.freeze(Object.fromEntries(AFFINITIES.map(a=>[a.id,a])));
