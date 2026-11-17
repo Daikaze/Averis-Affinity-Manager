@@ -1,4 +1,4 @@
-import {AFFINITY_MAP} from './catalog.mjs';
+import {AFFINITIES,AFFINITY_MAP} from './catalog.mjs';
 export const MODULE_ID='averis-affinity-manager';
 export const DC_BY_LEVEL=Object.freeze([10,13,15,17,20]);
 export const CHECKS=Object.freeze(['con','arc','ins']);
@@ -34,7 +34,7 @@ export function normalizeState(x){
   }
   const usage={};
   for(const [id,u] of Object.entries(isObj(raw.usage)?raw.usage:{})){
-    if(/^(fire|earth|wind|water|lightning|psychic|necrotic|poison|acid|ice|radiant|force|blood):[1-5]$/.test(id)) usage[id]=clamp(u,0,999);
+    if(/^([a-z]+):[1-5]$/.test(id) && AFFINITY_MAP[id.split(':')[0]]) usage[id]=clamp(u,0,999);
   }
   const suppressedFeatures=[...new Set(Array.isArray(raw.suppressedFeatures)?raw.suppressedFeatures:[])].filter(key=>{
     if(typeof key!=='string'||!/^([a-z]+):[1-5]$/.test(key))return false;
@@ -117,4 +117,10 @@ export function unsuppressFeature(state,id,level){
  const s=normalizeState(state),key=`${id}:${level}`;
  s.suppressedFeatures=s.suppressedFeatures.filter(k=>k!==key);
  return s;
+}
+
+/** Player interface may only enumerate Affinities GM granted to this Actor. */
+export function visibleAffinityCatalog(rawState,gm=false){
+ const known=normalizeState(rawState).known;
+ return AFFINITIES.filter(a=>!a.unavailable&&(gm||Object.hasOwn(known,a.id)));
 }

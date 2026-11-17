@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {AFFINITIES} from '../scripts/catalog.mjs';
 import {makeActivityBundle,damageParts} from '../scripts/activities.mjs';
 import {createFeatureData} from '../scripts/features.mjs';
-test('each of the 65 abilities has at least one native DnD5e 6.0.6 activity',()=>{
+test('each of the 110 abilities has at least one native DnD5e 6.0.6 activity',()=>{
  let n=0;
  for(const a of AFFINITIES)for(const ability of a.abilities){
   const data=createFeatureData(a.id,ability.level);
@@ -19,7 +19,7 @@ test('each of the 65 abilities has at least one native DnD5e 6.0.6 activity',()=
   }
   n++;
  }
- assert.equal(n,65);
+ assert.equal(n,110);
 });
 test('direct spell attack gets Attack activity with explicit attack classification and damage',()=>{
  const a=AFFINITIES.find(x=>x.id==='fire').abilities[0];

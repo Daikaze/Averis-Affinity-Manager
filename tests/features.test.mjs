@@ -36,7 +36,7 @@ test('creates a native D&D 5e feat Feature for every unlocked Affinity Level',()
   assert.ok(f.flags['averis-affinity-manager'].managedFeature);
  }
 });
-test('all 65 affinity Features contain canonical names and no numeric saving DC',()=>{
+test('all 110 affinity Features contain canonical names and no numeric saving DC',()=>{
  for(const aff of Object.values(AFFINITY_MAP)){
   if(aff.unavailable)continue;
   for(let level=1;level<=5;level++){

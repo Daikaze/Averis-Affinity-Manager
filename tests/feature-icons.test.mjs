@@ -7,7 +7,7 @@ import {createFeatureData,getOwnedFeatureIdentity,planFeatureSync,planAffinityIc
 import {featureIconPath,isLegacyAffinityIcon} from '../scripts/feature-icons.mjs';
 import {emptyState,grantAffinity,gmSetLevel} from '../scripts/engine.mjs';
 
-test('all 65 Affinity level Features have distinct bundled vector artwork',()=>{
+test('all 110 Affinity level Features have distinct bundled vector artwork',()=>{
  let count=0;
  const paths=new Set();
  for(const aff of Object.values(AFFINITY_MAP)){
@@ -22,15 +22,15 @@ test('all 65 Affinity level Features have distinct bundled vector artwork',()=>{
    assert.ok(existsSync(path),'Release artwork missing: '+path);
    const svg=readFileSync(path,'utf8');
    assert.match(svg,/<svg\b/);
-   assert.match(svg,/viewBox="0 0 128 128"/);
-   assert.match(svg,new RegExp('Level '+['I','II','III','IV','V'][level-1]));
+   assert.match(svg,/viewBox="0 0 (?:128 128|256 256)"/);
+   assert.ok(svg.includes('Level '+['I','II','III','IV','V'][level-1])||svg.includes('>'+['I','II','III','IV','V'][level-1]+'</text>'), 'Tier indicator missing: '+path);
    assert.doesNotMatch(svg,/<script\b|(?:href|src)="https?:/i);
    count++;
   }
  }
- assert.equal(count,65);
- assert.equal(paths.size,65);
- assert.equal(readdirSync('assets/affinity-icons').filter(x=>x.endsWith('.svg')).length,65);
+ assert.equal(count,110);
+ assert.equal(paths.size,110);
+ assert.equal(readdirSync('assets/affinity-icons').filter(x=>x.endsWith('.svg')).length,110);
 });
 test('only blank or old default aura is eligible for automatic icon replacement',()=>{
  for(const path of ['',null,undefined,'icons/svg/aura.svg'])assert.equal(isLegacyAffinityIcon(path),true);

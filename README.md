@@ -1,3 +1,12 @@
+## v0.4.0 — Nine new Special Affinities and player unlock visibility
+
+- **22 Affinities:** 12 Normal + 10 Special (Blood, Time, Space, Gravity, Soul, Dream, Void, Chaos, Fate, Metal). Thunder removed.
+- **110 abilities:** each Affinity has five levels and a distinct local SVG Feature icon. Special Affinities require GM authorization.
+- **Unlock-only player catalog:** players see only Affinities granted to their Actor, without previews of unknown names, powers or categories. This applies to the standalone window and the core/Tidy character sheet Affinity tab. GM sees all Normal and Special Affinities and uses Grant special.
+- Existing Actor progress, cooldown, usage and manually suppressed features remain intact. New Affinity usage now persists.
+- Important: concealment is enforced in the interface, not cryptographic secrecy. Players could inspect the publicly installed module code. Keep genuine campaign secrets in GM-only documents.
+- Back up the world before updating. Validate on a player account after installation.
+
 ## v0.3.3 — Native Foundry interface for V14 / 6.0.6
 
 - **Native ApplicationV2** window frame, edge resizing and double-click minimization; compact application title.

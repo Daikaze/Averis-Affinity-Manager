@@ -6,13 +6,13 @@ const source=readFileSync(new URL("../scripts/main.js",import.meta.url),"utf8");
 const manifest=JSON.parse(readFileSync(new URL("../module.json",import.meta.url),"utf8"));
 
 test("native V14 Affinity manager defaults and correct system target",()=>{
-  assert.equal(manifest.version,"0.3.3");
+  assert.equal(manifest.version,"0.4.0");
   assert.equal(manifest.compatibility.verified,"14");
   assert.equal(manifest.relationships.systems[0].compatibility.verified,"6.0.6");
   assert.ok(source.includes("frame:true,minimizable:true,resizable:true"));
   assert.ok(source.includes("window:{title:'Averis Affinity Manager'"));
   assert.ok(source.includes('aria-label="Affinity sections"'));
-  assert.ok(source.includes("Affinity Manager v0.3.3 targets"));
+  assert.ok(source.includes("Affinity Manager v0.4.0 targets"));
 });
 test("native CSS uses Foundry theme variables and scoped selectors",()=>{
   assert.ok(css.includes(".aam-window .window-content"));
@@ -40,3 +40,5 @@ test("core and Tidy Affinity tab routing and GM-only progression are preserved",
   assert.ok(source.includes("registerAffinitySheetTabs"));
   assert.ok(source.includes("syncActorFeatures"));
 });
+
+test("player-only unlock visibility applies in full dashboard and character-sheet tab",()=>{assert.ok(source.includes("visibleAffinityCatalog(state,gm)"));assert.ok(source.includes("const normals=catalog.filter(a=>!a.special)"));assert.ok(source.includes("specials=catalog.filter(a=>a.special)"));assert.ok(source.includes("No Affinities unlocked"));assert.ok(source.includes("profile(a).known[id]"));});

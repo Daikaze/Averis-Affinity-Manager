@@ -447,3 +447,10 @@
   .aam-embedded{height:min(660px,75vh);min-height:410px;}
   .aam-embedded .aam-top {padding:8px;}
 }
+
+/* v0.4.0: Category breaks within the same scroll surface. */
+:is(.aam-window,.aam-embedded) .aam-group-head{display:flex;align-items:center;justify-content:space-between;padding:11px 12px 5px;font-size:10px;letter-spacing:.11em;font-weight:700;color:var(--aam-muted);border-top:1px solid var(--aam-line)}
+:is(.aam-window,.aam-embedded) .aam-group-head.special{color:var(--aam-text)}
+:is(.aam-window,.aam-embedded) .aam-group-head span{font-variant-numeric:tabular-nums;opacity:.75}
+:is(.aam-window,.aam-embedded) .aam-shell.compact .aam-group-head{display:none}
+@container affinity-window (max-width:700px){.aam-window .aam-group-head{display:none}}
