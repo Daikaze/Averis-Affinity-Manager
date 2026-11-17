@@ -792,7 +792,7 @@ export const AFFINITIES = Object.freeze([
         ]
       }
     ]
-  }
+  },
   ...NEW_SPECIAL_AFFINITIES
 ]);
 export const AFFINITY_MAP = Object.freeze(Object.fromEntries(AFFINITIES.map(a=>[a.id,a])));
