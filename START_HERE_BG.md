@@ -1,3 +1,12 @@
+## v0.4.0 — Special Affinities
+
+- **22 Affinities:** 12 Normal и 10 Special: Blood, Time, Space, Gravity, Soul, Dream, Void, Chaos, Fate, Metal.
+- **Thunder е премахнат.** Общо **110 умения** на 5 нива и 110 отделни SVG иконки.
+- Всеки играч вижда **само отключените от GM Affinities на своя Actor**. Не вижда имената и способностите на неотключените. GM вижда цялата категория Special.
+- Запазени са стари нива, способности, cooldown и ръчно изтрити Features. Направи backup на света преди update.
+- Скриването е в интерфейса; кодът на инсталираните модули може да бъде прочетен чрез Developer Tools.
+- Manifest: https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json
+
 ## v0.3.2 — D&D 5e 6.0.6 / Foundry v14
 
 - Съвместимост: **Foundry VTT v14 (build 14.367+)** и **D&D 5e 6.0.6**.

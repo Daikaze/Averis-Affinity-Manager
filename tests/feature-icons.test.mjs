@@ -7,7 +7,7 @@ import {createFeatureData,getOwnedFeatureIdentity,planFeatureSync,planAffinityIc
 import {featureIconPath,isLegacyAffinityIcon} from '../scripts/feature-icons.mjs';
 import {emptyState,grantAffinity,gmSetLevel} from '../scripts/engine.mjs';
 
-test('all 65 Affinity level Features have distinct bundled vector artwork',()=>{
+test('all 110 Affinity level Features have distinct bundled vector artwork',()=>{
  let count=0;
  const paths=new Set();
  for(const aff of Object.values(AFFINITY_MAP)){
@@ -28,9 +28,9 @@ test('all 65 Affinity level Features have distinct bundled vector artwork',()=>{
    count++;
   }
  }
- assert.equal(count,65);
- assert.equal(paths.size,65);
- assert.equal(readdirSync('assets/affinity-icons').filter(x=>x.endsWith('.svg')).length,65);
+ assert.equal(count,110);
+ assert.equal(paths.size,110);
+ assert.equal(readdirSync('assets/affinity-icons').filter(x=>x.endsWith('.svg')).length,110);
 });
 test('only blank or old default aura is eligible for automatic icon replacement',()=>{
  for(const path of ['',null,undefined,'icons/svg/aura.svg'])assert.equal(isLegacyAffinityIcon(path),true);
