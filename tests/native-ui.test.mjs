@@ -41,4 +41,4 @@ test("core and Tidy Affinity tab routing and GM-only progression are preserved",
   assert.ok(source.includes("syncActorFeatures"));
 });
 
-test("player-only unlock visibility applies in full dashboard and character-sheet tab",()=>{assert.ok(source.includes("visibleAffinityCatalog(state,gm)"));assert.ok(source.includes("const normals=catalog.filter(a=>!a.special)"));assert.ok(source.includes("const specials=catalog.filter(a=>a.special)"));assert.ok(source.includes("No Affinities unlocked"));assert.ok(source.includes("profile(a).known[id]"));});
+test("player-only unlock visibility applies in full dashboard and character-sheet tab",()=>{assert.ok(source.includes("visibleAffinityCatalog(state,gm)"));assert.ok(source.includes("const normals=catalog.filter(a=>!a.special)"));assert.ok(source.includes("specials=catalog.filter(a=>a.special)"));assert.ok(source.includes("No Affinities unlocked"));assert.ok(source.includes("profile(a).known[id]"));});

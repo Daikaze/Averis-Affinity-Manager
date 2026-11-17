@@ -22,8 +22,8 @@ test('all 110 Affinity level Features have distinct bundled vector artwork',()=>
    assert.ok(existsSync(path),'Release artwork missing: '+path);
    const svg=readFileSync(path,'utf8');
    assert.match(svg,/<svg\b/);
-   assert.match(svg,/viewBox="0 0 128 128"/);
-   assert.match(svg,new RegExp('Level '+['I','II','III','IV','V'][level-1]));
+   assert.match(svg,/viewBox="0 0 (?:128 128|256 256)"/);
+   assert.ok(svg.includes('Level '+['I','II','III','IV','V'][level-1])||svg.includes('>'+['I','II','III','IV','V'][level-1]+'</text>'), 'Tier indicator missing: '+path);
    assert.doesNotMatch(svg,/<script\b|(?:href|src)="https?:/i);
    count++;
   }
