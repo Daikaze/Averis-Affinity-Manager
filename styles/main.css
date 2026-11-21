@@ -455,27 +455,8 @@
 :is(.aam-window,.aam-embedded) .aam-shell.compact .aam-group-head{display:none}
 @container affinity-window (max-width:700px){.aam-window .aam-group-head{display:none}}
 
-/* v0.5.0 — Creative Energy and Overload (standalone from granted ability uses). */
-:is(.aam-window,.aam-embedded) .aam-tab-bar{overflow-x:auto;flex-wrap:nowrap}
-:is(.aam-window,.aam-embedded) .aam-tab-bar button{white-space:nowrap}
-:is(.aam-window,.aam-embedded) .aam-energy-page{display:flex;flex-direction:column;gap:12px;color:var(--aam-text);padding:3px 0 18px}
-:is(.aam-window,.aam-embedded) .aam-energy-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
-:is(.aam-window,.aam-embedded) .aam-energy-heading h3{margin:0;font-size:1.08rem}
-:is(.aam-window,.aam-embedded) .aam-energy-heading small{opacity:.72}
-:is(.aam-window,.aam-embedded) .aam-energy-count{font-weight:800;font-size:1.25rem}
-:is(.aam-window,.aam-embedded) .aam-energy-pips{display:flex;gap:5px;flex-wrap:wrap}
-:is(.aam-window,.aam-embedded) .aam-energy-pip{height:14px;flex:1 1 17px;max-width:48px;background:var(--aam-panel);border:1px solid var(--aam-line);border-radius:4px}
-:is(.aam-window,.aam-embedded) .aam-energy-pip.filled{background:#3889dc;border-color:#7fb9f7;box-shadow:inset 0 0 5px #ffffff55}
-:is(.aam-window,.aam-embedded) .aam-energy-help{font-size:12px;line-height:1.6;opacity:.85;margin:0}
-:is(.aam-window,.aam-embedded) .aam-energy-warning{padding:9px 12px;border:1px solid #de7949;border-radius:5px;background:#a74c2722}
-:is(.aam-window,.aam-embedded) .aam-energy-actions,
-:is(.aam-window,.aam-embedded) .aam-energy-gm{display:flex;flex-wrap:wrap;gap:8px}
-:is(.aam-window,.aam-embedded) .aam-energy-actions button,
-:is(.aam-window,.aam-embedded) .aam-energy-gm button{padding:8px 12px;cursor:pointer;border-radius:5px}
-:is(.aam-window,.aam-embedded) .aam-energy-gm{padding:10px;border:1px solid var(--aam-line);border-radius:6px}
-:is(.aam-window,.aam-embedded) .aam-energy-costs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:7px}
-:is(.aam-window,.aam-embedded) .aam-energy-cost{display:flex;align-items:center;gap:10px;padding:10px;background:var(--aam-panel);border:1px solid var(--aam-line);border-radius:5px}
-:is(.aam-window,.aam-embedded) .aam-energy-cost>b{display:grid;place-items:center;min-width:30px;min-height:30px;background:#3889dc33;border-radius:6px}
-:is(.aam-window,.aam-embedded) .aam-energy-cost span{display:flex;flex-direction:column}
-:is(.aam-window,.aam-embedded) .aam-energy-cost small{opacity:.7;font-size:11px}
-:is(.aam-window,.aam-embedded) .aam-energy-hero{margin-top:8px;font-size:12px;font-weight:700;color:var(--aam-text)}
+/* v0.6.0 — Affinity tab for core NPC sheets with icon-only vertical navigation. */
+:is(.aam-window,.aam-embedded) .aam-core-link{cursor:pointer}
+.dnd5e.sheet.actor.npc .aam-core-link>i{font-size:1rem}
+.dnd5e.sheet.actor.npc .aam-core-body{min-width:0;max-width:100%}
+.dnd5e.sheet.actor.npc .aam-embedded{height:clamp(460px,70vh,800px)}

@@ -3,9 +3,6 @@ import {registerAffinitySheetTabs} from './sheet-integration.mjs';
 import {redactDC} from './redact.mjs';
 import {syncActorFeatures,getOwnedFeatureIdentity,planAffinityIconUpdates,syncActorAffinityIcons} from './features.mjs';
 import {MODULE_ID,DC_BY_LEVEL,CHECKS,MAX_NORMAL,normalizeState,emptyState,grantAffinity,gmSetLevel,gmAssignNpcAffinity,removeAffinity,nextCheck,attemptCheck,useAbility,longRest,maxUses,knownCount,clearTrainingCooldown,suppressFeature,visibleAffinityCatalog} from './engine.mjs';
-import {proficiencyFromActor} from './creative-energy.mjs';
-import {renderCreativeEnergy} from './creative-ui.mjs';
-import {creativeState,spendCreative,recoverCreative,gmEnergyOverride,gmClearBurnout,anyAffinity} from './creative-actions.mjs';
 
 const SOCKET=`module.${MODULE_ID}`;
 const SUPPORTED_DND5E_VERSION='6.0.6';
@@ -22,7 +19,7 @@ const ownership=a=>!!a&&(isGM()||!!a.testUserPermission?.(game.user,'OWNER'));
 const isActor=a=>a?.documentName==='Actor'&&['character','npc'].includes(a.type);
 const visibleActors=()=>[...(game.actors?.contents??[])].filter(a=>isActor(a)&&ownership(a)&&(isGM()||a.type==='character')).sort((a,b)=>a.name.localeCompare(b.name));
 const allTeachers=id=>[...(game.actors?.contents??[])].filter(a=>Math.max(profile(a).known[id]?.level??0,Number(a.getFlag(MODULE_ID,'mastery')?.[id]??0))>=5);
-const pb=a=>proficiencyFromActor(a);
+const pb=a=>Math.max(1,Math.min(9,Number(a?.system?.attributes?.prof??2)||2));
 const wait=new Set(),requestTimes=new Map();
 const iso=()=>new Date().toISOString().slice(0,16).replace('T',' ');
 function markdown(text,gm=false){
@@ -258,8 +255,8 @@ class AffinityDashboard extends foundry.applications.api.ApplicationV2{
   const playerCta=!gm&&actor&&known?`<button type="button" class="aam-request" data-action="request"><i class="fas fa-paper-plane"></i> ${known?'Request upgrade training':'Request to learn Affinity'}</button>`:'';
   const footer=`<footer class="aam-footer"><button type="button" data-action="long-rest"><i class="fas fa-bed"></i> Reset Affinity Uses (Long Rest)</button>${gm?'<button type="button" data-action="sync-features" title="Reconcile current Affinity levels with native D&D Features"><i class="fas fa-arrows-rotate"></i> Restore Features</button>':''}<span><i class="fas fa-shield-alt"></i> Powered by D&D 5e 6.0.6 · GM-approved progression</span><span>Ability effects are GM-adjudicated</span></footer>`;
   const history=state.history.filter(e=>gm||!e.id||!!state.known[e.id]).slice(-35).reverse().map(e=>`<div class="aam-event"><span>${esc((AFFINITY_MAP[e.id]?.name??'Affinity'))}</span><b>${esc(e.type==='check'?`${{con:'CON',arc:'Arcana',ins:'Insight'}[e.check]??'Check'} ${e.pass?'Passed':'Failed'}`:e.type==='grant'?'Learned':e.type==='use'?e.ability:e.type==='long-rest'?'Long Rest':e.type==='cooldown-reset'?'Cooldown cleared':e.type==='gm-set'?'GM level set':e.type==='remove'?'Removed':e.type)}</b><small>${e.levelUp?'Level Up!':e.type==='check'?`Step for Lv ${e.level}`:e.source??''}</small></div>`).join('')||'<div class="aam-empty">No Affinity history yet.</div>';
-  const content=this.tab==='energy'?renderCreativeEnergy({energy:creativeState(actor),pb:pb(actor),hasAffinity:!!Object.keys(state.known).length,isGM:gm,isNPC:gmNpc}):this.tab==='abilities'?`<div class="aam-cards">${abilityCards}</div>`:this.tab==='training'?`<div class="aam-info-card"><h3>Upgrade Path</h3><p>Each upgrade requires three successful checks in order: Constitution, Arcana and Insight.</p><p>Successful checks are saved, even when a later check fails. Retry waiting times are governed by world time.</p>${known?`<div class="aam-check-track">${CHECKS.map(c=>`<div class="${known.successes.includes(c)?'done':''}"><i class="fas ${known.successes.includes(c)?'fa-circle-check':'fa-circle'}"></i><b>${{con:'Constitution',arc:'Arcana',ins:'Insight'}[c]}</b><span>${known.successes.includes(c)?'Success':'Pending'}</span>${gm&&lv<5?`<small>DC ${DC_BY_LEVEL[lv]}</small>`:''}</div>`).join('')}</div><p>${next?.reason?`Training status: ${esc(next.reason)}${next.remaining?` — ${days(next.remaining)} remaining`:''}`:next?.check?`Next check: ${{con:'Constitution',arc:'Arcana',ins:'Insight'}[next.check]}`:'Maximum level achieved.'}</p>`:'<p>Learn an Affinity first to begin training.</p>'}</div>`:`<div class="aam-history">${history}</div>`;
-  const html=`<section class="aam-shell" style="--aff-color:${aff.color}"><div class="aam-top"><div class="aam-brand"><span class="aam-logo"><i class="fas fa-gem"></i></span><div><h1>Affinity Manager</h1></div></div><div class="aam-top-status"><span>${gm?'GM Controls':'Player View'}</span><b>D&D 5e 6.0.6</b></div></div><div class="aam-layout"><aside class="aam-sidebar"><div class="aam-sidebar-head"><label>CHARACTER</label>${this.embedded?`<div class="aam-actor-static"><i class="fas fa-user"></i> ${esc(actor?.name??"Character")}</div>`:`<select data-field="actorId" aria-label="Character">${actorOptions(this.actorId)}</select>`}<div class="aam-limit">${gmNpc?`Assigned ${Object.keys(state.known).length} <small>NPC · GM managed</small>`:`Known ${normal} / ${MAX_NORMAL} <small>Special excluded</small>`}</div></div><div class="aam-sidebar-title">AVAILABLE AFFINITIES <span>${catalog.length}</span></div><div class="aam-aff-list">${tiles}</div></aside><main class="aam-main"><div class="aam-aff-hero"><div class="aam-glow"></div><div class="aam-hero-icon">${icons(aff)}</div><div class="aam-hero-content"><small>AFFINITY PATH</small><h2>${esc(aff.name)}</h2><p>${pill} ${aff.special?'<span class="aam-pill special">Special</span>':''}</p>${progress}<div class="aam-energy-hero"><i class="fas fa-wand-magic-sparkles"></i> Creative Energy: ${creativeState(actor).current}/${creativeState(actor).max}</div></div></div><div class="aam-tab-bar" role="navigation" aria-label="Affinity sections"><button type="button" data-action="tab" data-id="abilities" class="${this.tab==='abilities'?'current':''}"><i class="fas fa-book-open"></i> Abilities</button><button type="button" data-action="tab" data-id="energy" class="${this.tab==='energy'?'current':''}"><i class="fas fa-wand-magic-sparkles"></i> Creative Energy</button><button type="button" data-action="tab" data-id="training" class="${this.tab==='training'?'current':''}"><i class="fas fa-chart-line"></i> Training</button><button type="button" data-action="tab" data-id="history" class="${this.tab==='history'?'current':''}"><i class="fas fa-clock-rotate-left"></i> History</button></div><div class="aam-main-scroll">${content}</div><div class="aam-bottom">${gmControls}${playerCta}${footer}</div></main></div></section>`;
+  const content=this.tab==='abilities'?`<div class="aam-cards">${abilityCards}</div>`:this.tab==='training'?`<div class="aam-info-card"><h3>Upgrade Path</h3><p>Each upgrade requires three successful checks in order: Constitution, Arcana and Insight.</p><p>Successful checks are saved, even when a later check fails. Retry waiting times are governed by world time.</p>${known?`<div class="aam-check-track">${CHECKS.map(c=>`<div class="${known.successes.includes(c)?'done':''}"><i class="fas ${known.successes.includes(c)?'fa-circle-check':'fa-circle'}"></i><b>${{con:'Constitution',arc:'Arcana',ins:'Insight'}[c]}</b><span>${known.successes.includes(c)?'Success':'Pending'}</span>${gm&&lv<5?`<small>DC ${DC_BY_LEVEL[lv]}</small>`:''}</div>`).join('')}</div><p>${next?.reason?`Training status: ${esc(next.reason)}${next.remaining?` — ${days(next.remaining)} remaining`:''}`:next?.check?`Next check: ${{con:'Constitution',arc:'Arcana',ins:'Insight'}[next.check]}`:'Maximum level achieved.'}</p>`:'<p>Learn an Affinity first to begin training.</p>'}</div>`:`<div class="aam-history">${history}</div>`;
+  const html=`<section class="aam-shell" style="--aff-color:${aff.color}"><div class="aam-top"><div class="aam-brand"><span class="aam-logo"><i class="fas fa-gem"></i></span><div><h1>Affinity Manager</h1></div></div><div class="aam-top-status"><span>${gm?'GM Controls':'Player View'}</span><b>D&D 5e 6.0.6</b></div></div><div class="aam-layout"><aside class="aam-sidebar"><div class="aam-sidebar-head"><label>CHARACTER</label>${this.embedded?`<div class="aam-actor-static"><i class="fas fa-user"></i> ${esc(actor?.name??"Character")}</div>`:`<select data-field="actorId" aria-label="Character">${actorOptions(this.actorId)}</select>`}<div class="aam-limit">${gmNpc?`Assigned ${Object.keys(state.known).length} <small>NPC · GM managed</small>`:`Known ${normal} / ${MAX_NORMAL} <small>Special excluded</small>`}</div></div><div class="aam-sidebar-title">AVAILABLE AFFINITIES <span>${catalog.length}</span></div><div class="aam-aff-list">${tiles}</div></aside><main class="aam-main"><div class="aam-aff-hero"><div class="aam-glow"></div><div class="aam-hero-icon">${icons(aff)}</div><div class="aam-hero-content"><small>AFFINITY PATH</small><h2>${esc(aff.name)}</h2><p>${pill} ${aff.special?'<span class="aam-pill special">Special</span>':''}</p>${progress}</div></div><div class="aam-tab-bar" role="navigation" aria-label="Affinity sections"><button type="button" data-action="tab" data-id="abilities" class="${this.tab==='abilities'?'current':''}"><i class="fas fa-book-open"></i> Abilities</button><button type="button" data-action="tab" data-id="training" class="${this.tab==='training'?'current':''}"><i class="fas fa-chart-line"></i> Training</button><button type="button" data-action="tab" data-id="history" class="${this.tab==='history'?'current':''}"><i class="fas fa-clock-rotate-left"></i> History</button></div><div class="aam-main-scroll">${content}</div><div class="aam-bottom">${gmControls}${playerCta}${footer}</div></main></div></section>`;
   const el=document.createElement('div');el.innerHTML=html;return el.firstElementChild;
  }
  _replaceHTML(rendered,content){content.replaceChildren(rendered);}
@@ -282,13 +279,6 @@ class AffinityDashboard extends foundry.applications.api.ApplicationV2{
    if(action==='tab'){this.tab=id;await this.render({force:true});return;}
    if(!actor)throw Error('Select a character.');
    if(action==='long-rest')await resetUses(actor);
-    if(action==='creative-spend')await spendCreative(actor,aff,'normal',input);
-    if(action==='creative-forced')await spendCreative(actor,aff,'forced',input);
-    if(action==='creative-empowered')await spendCreative(actor,aff,'empowered',input);
-    if(action==='energy-adjust')await gmEnergyOverride(actor,input);
-    if(action==='energy-short'&&isGM())await recoverCreative(actor,'short');
-    if(action==='energy-long'&&isGM())await resetUses(actor);
-    if(action==='energy-clear-burnout'&&isGM())await gmClearBurnout(actor);
     if(action==='assign-npc')await assignNpc(actor,aff);
    if(action==='request')sendRequest(actor,aff,profile(actor).known[aff]?'upgrade':'learn');
    if(action==='grant-innate')await grant(actor,aff,'innate');
@@ -361,7 +351,7 @@ function mountInlineAffinity({app,actor,host,prior}){
  if(isGM())void refreshExistingAffinityIcons(actor);
  return view.render();
 }
-const sheetTabs=registerAffinitySheetTabs({mount:mountInlineAffinity,isCharacter:isActor,canView:ownership});
+const sheetTabs=registerAffinitySheetTabs({mount:mountInlineAffinity,isCharacter:a=>a?.documentName==='Actor'&&a.type==='character',isNpc:a=>a?.documentName==='Actor'&&a.type==='npc',canView:a=>ownership(a)&&(a.type==='character'||isGM())});
 
 let dashboard=null;
 async function open({actor=null,affinity=null}={}){
@@ -385,28 +375,14 @@ async function openSafe(options={}) {
   try { return await open(options); }
   catch(error) { err(error); return false; }
 }
-async function resetUses(a){if(!ownership(a))throw Error('No permission.');if(!await confirm('Long Rest · Reset Affinities',`Reset tracked Affinity uses, Creative Energy and Overload for ${esc(a.name)}? This does not change D&D spell slots or standard rest resources.`,'Reset Affinity Uses'))return;await change(a,s=>longRest(s));await recoverCreative(a,'long');}
+async function resetUses(a){if(!ownership(a))throw Error('No permission.');if(!await confirm('Long Rest · Reset Affinities',`Reset all tracked Affinity uses for ${esc(a.name)}? This does not change D&D spell slots or standard rest resources.`,'Reset Affinity Uses'))return;await change(a,s=>longRest(s));}
 Hooks.once('init',()=>{
  game.settings.register(MODULE_ID,'failureDays',{name:'Training cooldown after failed check (world days)',scope:'world',config:true,type:Number,range:{min:0,max:30,step:1},default:3});
  game.settings.register(MODULE_ID,'successDays',{name:'Training cooldown after upgrading (world days)',scope:'world',config:true,type:Number,range:{min:0,max:30,step:1},default:7});
  game.keybindings.register(MODULE_ID,'open',{name:'Open Averis Affinity Manager',editable:[{key:'KeyA',modifiers:['ALT']}],onDown:()=>{void openSafe();return true;},restricted:false});
- game.modules.get(MODULE_ID).api={open,grantAffinity:grant,assignNpcAffinity:assignNpc,removeAffinity:removeKnown,useSelected:activate,syncFeatures:reconcileFeatures,resetUses,getProgress:profile,getCreativeEnergy:creativeState,spendCreativeEnergy:(a,id,mode='normal')=>spendCreative(a,id,mode,input),recoverCreativeEnergy:recoverCreative,getCatalog:()=>isGM()?AFFINITIES:AFFINITIES.filter(a=>visibleActors().some(actor=>!!profile(actor).known[a.id]))};
+ game.modules.get(MODULE_ID).api={open,grantAffinity:grant,assignNpcAffinity:assignNpc,removeAffinity:removeKnown,useSelected:activate,syncFeatures:reconcileFeatures,resetUses,getProgress:profile,getCatalog:()=>isGM()?AFFINITIES:AFFINITIES.filter(a=>visibleActors().some(actor=>!!profile(actor).known[a.id]))};
 });
-Hooks.once('ready',()=>{if(game.system?.id!=='dnd5e'||game.system?.version!==SUPPORTED_DND5E_VERSION)warn(`Averis Affinity Manager v0.5.0 targets D&D 5e ${SUPPORTED_DND5E_VERSION} on Foundry V14.`);game.socket?.on(SOCKET,msg=>void handleRequest(msg).catch(err));});
-// D&D5e emits this after a completed rest, including party rests. Only the
-// active GM applies recovery to avoid multiple connected clients granting it.
-Hooks.on('dnd5e.restCompleted',(actor,result={},config={})=>{
-  if(!isActor(actor)||!anyAffinity(actor))return;
-  const activeGM=game.users?.activeGM;
-  if(activeGM&&game.user?.id!==activeGM.id)return;
-  if(!activeGM&&!ownership(actor))return;
-  const long= result?.longRest===true||config?.longRest===true||
-    result?.type==='long'||config?.type==='long'||
-    result?.restType==='long'||config?.restType==='long';
-  void (async()=>{await recoverCreative(actor,long?'long':'short');
-    if(long)await change(actor,s=>longRest(s));
-  })().catch(err);
-});
+Hooks.once('ready',()=>{if(game.system?.id!=='dnd5e'||game.system?.version!==SUPPORTED_DND5E_VERSION)warn(`Averis Affinity Manager v0.6.0 targets D&D 5e ${SUPPORTED_DND5E_VERSION} on Foundry V14.`);game.socket?.on(SOCKET,msg=>void handleRequest(msg).catch(err));});
 Hooks.on('updateActor',a=>{if(dashboard?.rendered&&a.id===dashboard.actorId)void dashboard.render({force:true}).catch(err);sheetTabs.refreshActor(a);});
 
 Hooks.on('deleteItem',(item,options={},userId)=>{
