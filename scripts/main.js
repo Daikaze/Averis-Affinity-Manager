@@ -2,7 +2,10 @@ import {AFFINITIES,AFFINITY_MAP} from './catalog.mjs';
 import {registerAffinitySheetTabs} from './sheet-integration.mjs';
 import {redactDC} from './redact.mjs';
 import {syncActorFeatures,getOwnedFeatureIdentity,planAffinityIconUpdates,syncActorAffinityIcons} from './features.mjs';
-import {MODULE_ID,DC_BY_LEVEL,CHECKS,MAX_NORMAL,normalizeState,emptyState,grantAffinity,gmSetLevel,removeAffinity,nextCheck,attemptCheck,useAbility,longRest,maxUses,knownCount,clearTrainingCooldown,suppressFeature,visibleAffinityCatalog} from './engine.mjs';
+import {MODULE_ID,DC_BY_LEVEL,CHECKS,MAX_NORMAL,normalizeState,emptyState,grantAffinity,gmSetLevel,gmAssignNpcAffinity,removeAffinity,nextCheck,attemptCheck,useAbility,longRest,maxUses,knownCount,clearTrainingCooldown,suppressFeature,visibleAffinityCatalog} from './engine.mjs';
+import {proficiencyFromActor} from './creative-energy.mjs';
+import {renderCreativeEnergy} from './creative-ui.mjs';
+import {creativeState,spendCreative,recoverCreative,gmEnergyOverride,gmClearBurnout,anyAffinity} from './creative-actions.mjs';
 
 const SOCKET=`module.${MODULE_ID}`;
 const SUPPORTED_DND5E_VERSION='6.0.6';
@@ -16,10 +19,10 @@ const nowWorld=()=>Number(game.time?.worldTime??0);
 const days=s=>{const hours=Math.max(0,Math.ceil(Number(s)/3600));return `${Math.floor(hours/24)}d ${hours%24}h`;};
 const profile=a=>normalizeState(a?.getFlag?.(MODULE_ID,'progress'));
 const ownership=a=>!!a&&(isGM()||!!a.testUserPermission?.(game.user,'OWNER'));
-const isActor=a=>a?.documentName==='Actor'&&a.type==='character';
-const visibleActors=()=>[...(game.actors?.contents??[])].filter(a=>isActor(a)&&ownership(a)).sort((a,b)=>a.name.localeCompare(b.name));
+const isActor=a=>a?.documentName==='Actor'&&['character','npc'].includes(a.type);
+const visibleActors=()=>[...(game.actors?.contents??[])].filter(a=>isActor(a)&&ownership(a)&&(isGM()||a.type==='character')).sort((a,b)=>a.name.localeCompare(b.name));
 const allTeachers=id=>[...(game.actors?.contents??[])].filter(a=>Math.max(profile(a).known[id]?.level??0,Number(a.getFlag(MODULE_ID,'mastery')?.[id]??0))>=5);
-const pb=a=>Math.max(1,Math.min(6,Number(a?.system?.attributes?.prof??2)||2));
+const pb=a=>proficiencyFromActor(a);
 const wait=new Set(),requestTimes=new Map();
 const iso=()=>new Date().toISOString().slice(0,16).replace('T',' ');
 function markdown(text,gm=false){
@@ -110,6 +113,17 @@ async function grant(a,id,source){
  const yes=await confirm('Grant Affinity',`<p>Grant <strong>${esc(aff.name)}</strong> to ${esc(a.name)}?</p><p>Method: ${esc(source)}. Starting at Level 0 — first upgrade still requires three checks.</p>`,'Grant Affinity');
  if(!yes)return;
  await change(a,s=>grantAffinity(s,id,{source,teacherId,teacherLevel}));info(`${a.name} has learned ${aff.name}.`);
+}
+async function assignNpc(a,id){
+  if(!isGM()||a?.type!=='npc')throw Error('NPC assignment is GM-only.');
+  const raw=await input('GM · Assign NPC Affinity',
+    '<p>Assign an Affinity at Level 1–5 directly to this NPC (no training checks required).</p>'+
+    '<label>Affinity Level<input name="level" type="number" min="1" max="5" value="1" required></label>','Assign');
+  if(!raw)return;
+  const level=Number(raw.level);
+  if(!Number.isInteger(level)||level<1||level>5)throw Error('NPC Level must be 1–5.');
+  await change(a,s=>gmAssignNpcAffinity(s,id,level));
+  await reconcileFeatures(a,profile(a),{affinityId:id});
 }
 async function markTeacher(id){
  if(!isGM())throw Error('GM only.');const actors=[...(game.actors?.contents??[])].filter(a=>a.documentName==='Actor');
