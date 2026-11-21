@@ -129,3 +129,19 @@ await game.modules.get("averis-affinity-manager").api.open();
 ## Built-in catalog
 
 Fire, Earth, Wind, Water, Lightning, Psychic, Necrotic, Poison, Acid, Ice, Radiant, Force, and Special Blood. No description is replaced or balanced without DM input.
+
+## v0.5.0 — Creative Affinity Energy and NPCs
+
+Creative Energy is **only for improvised/homebrew affinity actions** approved and priced by the GM. **All 110 granted Affinity abilities and spells retain their own original usage rules, spell slots and limits; they never consume Creative Energy.**
+
+- Max Creative Energy = Actor Proficiency Bonus. Shared among all known Affinities; no extra pool per Affinity. NPCs can use their own PB (including CR 21+); the GM can override an NPC's maximum.
+- D&D5e short rest restores **1 Energy**. Long rest fully restores Energy, resets Overload, and resets the module's previous ability-use tracker. The GM can also recover or adjust manually.
+- The **Creative Energy** dashboard tab opens a form to record an improvised action and its **GM-assigned Energy Cost (1–6)**. This action is recorded in chat with the energy cost. It never triggers granted Feature Activities or consumes spell slots.
+- **Forced Activation**: allowed only when the custom cost exceeds remaining Energy; each missing Energy creates one Strain, maximum 3.
+- **Empowered Overload**: can boost a GM-approved custom action when the normal cost is affordable, adding 1 Strain. The specific empowered effect is chosen by the GM.
+- Both share **one Overload per Long Rest**. Roll CON save vs DC 10 + 2×Strain. Success: Strain d6 backlash; failure: (2×Strain)d6 backlash and Burnout until after the next turn. Backlash damage is rolled in chat and **HP/Temp HP is adjusted by the GM**, not automatically.
+- **NPC support**: Open the Affinity Dashboard (Alt+A) as GM, select any world NPC Actor, choose an Affinity, then **Assign NPC Affinity** at Level 1–5. Existing native Features will be synchronized to that Actor; no training checks are required. NPCs can exceed the normal player Affinity cap by GM assignment.
+- Player visibility: NPCs are GM-only in the dashboard. Players continue to see only their unlocked Affinities. Locked Special paths and training DCs are not displayed to players.
+- The automatic rest hook is `dnd5e.restCompleted`. In games with an active GM, only the active GM performs automatic recovery, avoiding duplicate recovery from multiple connected players.
+
+**Known limitation:** Burnout is GM-cleared after the next turn, and backlash HP adjustment is manual. These are deliberate adjudication points rather than invisible automatic combat changes. NPC affinities are managed from the GM dashboard (not a custom NPC sheet tab).

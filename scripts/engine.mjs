@@ -104,6 +104,16 @@ export function clearTrainingCooldown(state,id){
   // Do not erase successes, levels, ability uses, or other affinities.
   return recordHistory(s,{type:'cooldown-reset',id});
 }
+/** GM-only direct assignment for NPC actors. No player training or normal-affinity cap. */
+export function gmAssignNpcAffinity(state,id,level=1){
+ const s=normalizeState(state),aff=AFFINITY_MAP[id];
+ const lv=Number(level);
+ if(!aff||aff.unavailable)throw Error("Unknown Affinity.");
+ if(!Number.isInteger(lv)||lv<1||lv>5)throw Error("NPC Affinity Level must be 1 to 5.");
+ s.known[id]={level:lv,successes:[],retryAt:0};
+ s.suppressedFeatures=s.suppressedFeatures.filter(k=>!k.startsWith(id+":"));
+ return recordHistory(s,{type:"npc-assign",id,level:lv});
+}
 export function removeAffinity(state,id){const s=normalizeState(state);if(!s.known[id])throw Error('This Affinity is not known.');delete s.known[id];s.suppressedFeatures=s.suppressedFeatures.filter(k=>!k.startsWith(id+':'));for(let i=1;i<=5;i++)delete s.usage[`${id}:${i}`];return recordHistory(s,{type:'remove',id});}
 /** Remember explicit Character Sheet deletion, so no later action resurrects it. */
 export function suppressFeature(state,id,level){
