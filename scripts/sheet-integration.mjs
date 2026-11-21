@@ -1,27 +1,30 @@
 /**
- * Character sheet integration for Tidy 5e (official custom tab API) and the
- * standard dnd5e V14 character sheet. No monkey-patching of system classes.
+ * In-sheet Affinity tab integration for character and NPC Actors.
+ * Supports Tidy 5e's public character/NPC tab APIs and official D&D5e V14
+ * sheet navigation without patching D&D5e sheet prototypes.
  *
- * The mount callback owns the Affinity UI and is intentionally kept separate
- * from both sheet implementations. Each sheet has independent view state.
+ * NPC tabs are GM-only by default; callers provide the permission policy.
  */
 export const AFFINITY_TAB_ID="averis-affinity-manager-affinity";
-const installed = new WeakMap();
-const active = new Set();
-let tidyRegistered=false;
+const installed=new WeakMap();
+const active=new Set();
+let tidyCharacterRegistered=false;
+let tidyNpcRegistered=false;
 
 export function registerAffinitySheetTabs({
   hooks=Hooks,
   getTidyApi=()=>game.modules?.get("tidy5e-sheet")?.api,
   mount,
   isCharacter=a=>a?.documentName==="Actor"&&a?.type==="character",
+  isNpc=a=>a?.documentName==="Actor"&&a?.type==="npc",
   canView=()=>true
 }={}){
   if(typeof mount!=="function")throw Error("Affinity tab needs a mount callback.");
   const resolveActor=app=>app?.actor??app?.document;
+  const isSupported=actor=>isCharacter(actor)||isNpc(actor);
   const mountIn=(app,host)=>{
     const actor=resolveActor(app);
-    if(!host||!isCharacter(actor)||!canView(actor))return;
+    if(!host||!isSupported(actor)||!canView(actor))return;
     let existing=installed.get(app);
     if(!existing||existing.actorId!==actor.id){
       existing?.dispose?.();
@@ -34,43 +37,56 @@ export function registerAffinitySheetTabs({
     return existing;
   };
 
+  const makeTidyTab=api=>new api.models.HtmlTab({
+    tabId:AFFINITY_TAB_ID,
+    title:"Affinity",
+    iconClass:"fa-solid fa-gem",
+    html:'<div class="aam-window aam-embedded aam-tidy-host" data-aam-inline-host></div>',
+    enabled:context=>{
+      const actor=context?.actor??context?.document??context?.sheet?.actor;
+      return actor?isSupported(actor)&&canView(actor):true;
+    },
+    onRender:params=>{
+      const host=params?.tabContentsElement?.querySelector?.("[data-aam-inline-host]")
+           ??(params?.tabContentsElement?.matches?.("[data-aam-inline-host]")?params.tabContentsElement:null);
+      mountIn(params?.app,host);
+    }
+  });
+
   const installTidy=api=>{
-    if(tidyRegistered||!api?.registerCharacterTab||!api?.models?.HtmlTab)return false;
-    tidyRegistered=true;
-    api.registerCharacterTab(new api.models.HtmlTab({
-      tabId:AFFINITY_TAB_ID,
-      title:"Affinity",
-      iconClass:"fa-solid fa-gem",
-      html:'<div class="aam-window aam-embedded aam-tidy-host" data-aam-inline-host></div>',
-      enabled:context=>{
-        const actor=context?.actor??context?.document??context?.sheet?.actor;
-        return actor?canView(actor):true;
-      },
-      onRender:params=>{
-        const host=params?.tabContentsElement?.querySelector?.("[data-aam-inline-host]")
-             ??(params?.tabContentsElement?.matches?.("[data-aam-inline-host]")?params.tabContentsElement:null);
-        mountIn(params?.app,host);
-      }
-    }),{includeAsDefaultTab:true});
-    return true;
+    if(!api?.models?.HtmlTab)return false;
+    let registered=false;
+    if(!tidyCharacterRegistered&&typeof api.registerCharacterTab==="function"){
+      api.registerCharacterTab(makeTidyTab(api),{includeAsDefaultTab:true});
+      tidyCharacterRegistered=true;
+      registered=true;
+    }
+    if(!tidyNpcRegistered&&typeof api.registerNpcTab==="function"){
+      api.registerNpcTab(makeTidyTab(api),{includeAsDefaultTab:true});
+      tidyNpcRegistered=true;
+      registered=true;
+    }
+    return registered;
   };
   hooks.once("tidy5e-sheet.ready",installTidy);
   hooks.once("ready",()=>{installTidy(getTidyApi());});
 
   function ensureCoreTab(app){
     const actor=resolveActor(app);
-    if(!isCharacter(actor)||!canView(actor))return;
+    if(!isSupported(actor)||!canView(actor))return;
     const tidy=getTidyApi();
     if(typeof tidy?.isTidy5eSheet==="function"){
       try{if(tidy.isTidy5eSheet(app))return;}catch{}
     }
-    // Official V14 character sheet: nav.tabs[data-group="primary"] and
-    // .tab-body#tabs are defined by dnd5e 6.0.6 CharacterActorSheet.PARTS.
+    // Official D&D5e v6.0.6: both Character and NPC sheets use nav.tabs
+    // with data-group="primary", and a .tab-body#tabs container.
+    // NPC sheet uses vertical/right-side icon tabs.
     const root=app?.element;
     if(!root?.querySelector)return;
     const nav=root.querySelector('nav.tabs[data-group="primary"]');
     const body=root.querySelector('.tab-body#tabs, #tabs.tab-body');
     if(!nav||!body)return;
+    const npc=isNpc(actor);
     let link=nav.querySelector('[data-aam-tab-link]');
     if(!link){
       link=document.createElement("a");
@@ -79,7 +95,9 @@ export function registerAffinitySheetTabs({
       link.setAttribute("role","tab");
       link.setAttribute("aria-label","Affinity");
       link.title="Affinity";
-      link.innerHTML='<i class="fas fa-gem" aria-hidden="true"></i><span>Affinity</span>';
+      link.innerHTML=npc
+        ?'<i class="fas fa-gem" aria-hidden="true"></i>'
+        :'<i class="fas fa-gem" aria-hidden="true"></i><span>Affinity</span>';
       const ref=nav.querySelector('[data-tab="features"]');
       if(ref)ref.after(link);else nav.append(link);
     }
@@ -108,7 +126,7 @@ export function registerAffinitySheetTabs({
       wrapper.hidden=true;
     };
     if(!nav.dataset.aamDelegated){
-      // Capture first: the sheet's own tab action must not intercept our link.
+      // Capture before D&D5e's own tab handling, without changing its code.
       nav.addEventListener("click",e=>{
         if(e.target.closest("[data-aam-tab-link]")){
           e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
@@ -121,18 +139,22 @@ export function registerAffinitySheetTabs({
     else deselect();
   }
   hooks.on("renderCharacterActorSheet",ensureCoreTab);
+  hooks.on("renderNPCActorSheet",ensureCoreTab);
   hooks.on("renderActorSheetV2",ensureCoreTab);
+
   const onClose=app=>{
     installed.get(app)?.dispose?.();
-    installed.delete(app);active.delete(app);
+    installed.delete(app);
+    active.delete(app);
   };
   hooks.on("closeCharacterActorSheet",onClose);
+  hooks.on("closeNPCActorSheet",onClose);
   hooks.on("closeActorSheetV2",onClose);
+
   const refreshActor=actor=>{
     for(const app of active){
       if(installed.get(app)?.actorId!==actor.id)continue;
       const view=installed.get(app);
-      // Do not re-render an inactive tab or a removed host.
       if(typeof view?.refresh==="function")
         void Promise.resolve(view.refresh()).catch(e=>console.error("[Affinity Manager] Tab refresh error",e));
     }
