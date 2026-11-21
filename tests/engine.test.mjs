@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {AFFINITIES} from '../scripts/catalog.mjs';
-import {emptyState,grantAffinity,attemptCheck,knownCount,nextCheck,gmSetLevel,useAbility,longRest,maxUses,normalizeState,removeAffinity,clearTrainingCooldown,remainingTrainingCooldown,MAX_REASONABLE_COOLDOWN_DAYS,visibleAffinityCatalog} from '../scripts/engine.mjs';
+import {emptyState,grantAffinity,attemptCheck,knownCount,nextCheck,gmSetLevel,useAbility,longRest,maxUses,normalizeState,removeAffinity,clearTrainingCooldown,remainingTrainingCooldown,MAX_REASONABLE_COOLDOWN_DAYS,visibleAffinityCatalog,gmAssignNpcAffinity} from '../scripts/engine.mjs';
 test('complete catalog: 12 Normal, 10 Special, 110 abilities, no Thunder',()=>{assert.equal(AFFINITIES.length,22);assert.equal(AFFINITIES.reduce((n,a)=>n+a.abilities.length,0),110);assert.equal(AFFINITIES.filter(a=>a.special).length,10);assert.equal(AFFINITIES.filter(a=>!a.special).length,12);assert.equal(AFFINITIES.find(a=>a.id==='thunder'),undefined);for(const aff of AFFINITIES)for(let l=1;l<=5;l++)assert.equal(aff.abilities[l-1].level,l);for(const id of ['blood','time','space','gravity','soul','dream','void','chaos','fate','metal'])assert.equal(AFFINITIES.find(a=>a.id===id).special,true);});
 test('player interface only sees the Affinities unlocked for its specific character',()=>{let a=emptyState();assert.deepEqual(visibleAffinityCatalog(a).map(x=>x.id),[]);assert.equal(visibleAffinityCatalog(a,true).length,22);a=grantAffinity(a,'fire');a=grantAffinity(a,'time',{source:'gm-special'});assert.deepEqual(visibleAffinityCatalog(a).map(x=>x.id),['fire','time']);const b=grantAffinity(emptyState(),'blood',{source:'gm-special'});assert.deepEqual(visibleAffinityCatalog(b).map(x=>x.id),['blood']);assert.ok(!visibleAffinityCatalog(removeAffinity(a,'time')).some(x=>x.id==='time'));});
 test('new special affinity uses persist and do not count toward normal limit',()=>{let s=grantAffinity(emptyState(),'time',{source:'gm-special'});s=gmSetLevel(s,'time',1);s=useAbility(s,'time',1,2);s=useAbility(s,'time',1,2);assert.throws(()=>useAbility(s,'time',1,2));assert.equal(normalizeState(s).usage['time:1'],2);assert.equal(knownCount(s),0);assert.throws(()=>grantAffinity(emptyState(),'time'));});
@@ -45,4 +45,19 @@ test('legitimate waits up to 30 days are preserved, GM reset retains partial che
  assert.equal(state.known.fire.level,0);
  assert.equal(nextCheck(state,'fire',now).check,'arc');
  assert.throws(()=>clearTrainingCooldown(emptyState(),'fire'));
+});
+
+test('GM can directly assign NPC normal and Special Affinities at arbitrary levels',()=>{
+ let state=gmAssignNpcAffinity(emptyState(),'fire',3);
+ assert.equal(state.known.fire.level,3);
+ assert.deepEqual(state.known.fire.successes,[]);
+ assert.equal(state.known.fire.retryAt,0);
+ state=gmAssignNpcAffinity(state,'blood',5);
+ for(const id of ['water','wind','earth'])state=gmAssignNpcAffinity(state,id,1);
+ assert.equal(knownCount(state),4,'NPC GM assignments bypass player normal cap');
+ assert.equal(state.known.blood.level,5);
+ assert.deepEqual(visibleAffinityCatalog(state,false).map(a=>a.id),['fire','earth','wind','water','blood']);
+ assert.throws(()=>gmAssignNpcAffinity(state,'fire',0));
+ assert.throws(()=>gmAssignNpcAffinity(state,'fire',6));
+ assert.throws(()=>gmAssignNpcAffinity(state,'not-an-affinity',1));
 });
