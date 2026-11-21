@@ -58,11 +58,11 @@
 - След Long Rest натисни **Reset Affinity Uses (Long Rest)**.
 - DC числата се крият от UI и общия чат, но *модулен код може да бъде прочетен от любопитен играч*; това не е криптографска защита.
 
-## v0.5.0 — Creative Energy и NPC Affinities
+## v0.6.0 — Affinity в NPC Sheet
 
-- **Creative Energy е отделна** от готовите Affinity Spells и Features. Готовите способности НЕ харчат Creative Energy.
-- Максимална Energy = PB на Actor; Short Rest +1, Long Rest възстановява всичко. Споделен ресурс за всички Affinities.
-- GM определя цената (1–6 Energy) за импровизирани homebrew действия. В таб **Creative Energy** играчът избира режим и записва действието; цената и описанието се записват в чата.
-- Forced Activation: използва се при недостиг, максимум 3 Strain. Empowered Overload: при платена нормална цена, добавя 1 Strain. Общо 1 Overload / Long Rest. CON Save DC 10+2×Strain; при успех Strain d6 Force, при провал 2×Strain d6 Force и Burnout. GM прилага HP щетата и изчиства Burnout след следващия ход.
-- NPC: GM отваря **Alt+A**, избира NPC Actor, натиска **Assign NPC Affinity** и задава Level 1–5. Способностите се синхронизират към Actor като Features; NPC няма нужда от training checks. GM може да задава и ръчен максимален Energy.
-- Ако използваш NPC от различна сцена, работи със световния Actor от Actors Directory; за linked Token промените ще се виждат.
+- Creative Energy, Overload, техните бутони и автоматичното възстановяване на Energy са премахнати. Импровизираните Homebrew действия се управляват ръчно от GM.
+- NPC Actor Sheet вече има бутон/таб **Affinity** (иконка gem), както Player Sheet.
+- Работи със стандартния D&D 5e v6.0.6 NPC Sheet във Foundry v14 и с Tidy 5e NPC Sheet.
+- GM отваря NPC Sheet → **Affinity** → избира Affinity → **Assign NPC Affinity** → Level 1–5. Способностите се добавят като отделни Features в NPC Actor.
+- NPC Affinity управлението е GM-only и не изисква три проверки за развитие. PC Affinities остават скрити, докато не се отключат.
+- Старите Creative Energy стойности във flags не се изтриват от Actor-ите, но вече не се използват.
