@@ -1,8 +1,8 @@
 {
   "id": "averis-affinity-manager",
   "title": "Averis Affinity Manager",
-  "description": "Averis Affinity Manager for Foundry V14 / D&D5e 6.0.6: 22 Affinities, 110 granted abilities, creative PB Energy, Overload and GM-assigned NPC Affinities.",
-  "version": "0.5.0",
+  "description": "Affinity progression for Foundry V14 / D&D5e 6.0.6: 22 Affinities, 110 abilities, hidden unlocks, GM-only DCs and Affinity tabs in both character and NPC sheets.",
+  "version": "0.6.0",
   "authors": [
     {
       "name": "Averis Campaign"
@@ -35,5 +35,5 @@
   "socket": true,
   "url": "https://github.com/Daikaze/Averis-Affinity-Manager",
   "manifest": "https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json",
-  "download": "https://github.com/Daikaze/Averis-Affinity-Manager/releases/download/affinity-v0.5.0/averis-affinity-manager-v0.5.0.zip"
+  "download": "https://github.com/Daikaze/Averis-Affinity-Manager/releases/download/affinity-v0.6.0/averis-affinity-manager-v0.6.0.zip"
 }
