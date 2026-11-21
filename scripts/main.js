@@ -385,14 +385,28 @@ async function openSafe(options={}) {
   try { return await open(options); }
   catch(error) { err(error); return false; }
 }
-async function resetUses(a){if(!ownership(a))throw Error('No permission.');if(!await confirm('Long Rest · Reset Affinities',`Reset all tracked Affinity uses for ${esc(a.name)}? This does not change D&D spell slots or standard rest resources.`,'Reset Affinity Uses'))return;await change(a,s=>longRest(s));}
+async function resetUses(a){if(!ownership(a))throw Error('No permission.');if(!await confirm('Long Rest · Reset Affinities',`Reset tracked Affinity uses, Creative Energy and Overload for ${esc(a.name)}? This does not change D&D spell slots or standard rest resources.`,'Reset Affinity Uses'))return;await change(a,s=>longRest(s));await recoverCreative(a,'long');}
 Hooks.once('init',()=>{
  game.settings.register(MODULE_ID,'failureDays',{name:'Training cooldown after failed check (world days)',scope:'world',config:true,type:Number,range:{min:0,max:30,step:1},default:3});
  game.settings.register(MODULE_ID,'successDays',{name:'Training cooldown after upgrading (world days)',scope:'world',config:true,type:Number,range:{min:0,max:30,step:1},default:7});
  game.keybindings.register(MODULE_ID,'open',{name:'Open Averis Affinity Manager',editable:[{key:'KeyA',modifiers:['ALT']}],onDown:()=>{void openSafe();return true;},restricted:false});
- game.modules.get(MODULE_ID).api={open,grantAffinity:grant,removeAffinity:removeKnown,useSelected:activate,syncFeatures:reconcileFeatures,resetUses,getProgress:profile,getCatalog:()=>isGM()?AFFINITIES:AFFINITIES.filter(a=>visibleActors().some(actor=>!!profile(actor).known[a.id]))};
+ game.modules.get(MODULE_ID).api={open,grantAffinity:grant,assignNpcAffinity:assignNpc,removeAffinity:removeKnown,useSelected:activate,syncFeatures:reconcileFeatures,resetUses,getProgress:profile,getCreativeEnergy:creativeState,spendCreativeEnergy:(a,id,mode='normal')=>spendCreative(a,id,mode,input),recoverCreativeEnergy:recoverCreative,getCatalog:()=>isGM()?AFFINITIES:AFFINITIES.filter(a=>visibleActors().some(actor=>!!profile(actor).known[a.id]))};
 });
-Hooks.once('ready',()=>{if(game.system?.id!=='dnd5e'||game.system?.version!==SUPPORTED_DND5E_VERSION)warn(`Averis Affinity Manager v0.4.0 targets D&D 5e ${SUPPORTED_DND5E_VERSION} on Foundry V14.`);game.socket?.on(SOCKET,msg=>void handleRequest(msg).catch(err));});
+Hooks.once('ready',()=>{if(game.system?.id!=='dnd5e'||game.system?.version!==SUPPORTED_DND5E_VERSION)warn(`Averis Affinity Manager v0.5.0 targets D&D 5e ${SUPPORTED_DND5E_VERSION} on Foundry V14.`);game.socket?.on(SOCKET,msg=>void handleRequest(msg).catch(err));});
+// D&D5e emits this after a completed rest, including party rests. Only the
+// active GM applies recovery to avoid multiple connected clients granting it.
+Hooks.on('dnd5e.restCompleted',(actor,result={},config={})=>{
+  if(!isActor(actor)||!anyAffinity(actor))return;
+  const activeGM=game.users?.activeGM;
+  if(activeGM&&game.user?.id!==activeGM.id)return;
+  if(!activeGM&&!ownership(actor))return;
+  const long= result?.longRest===true||config?.longRest===true||
+    result?.type==='long'||config?.type==='long'||
+    result?.restType==='long'||config?.restType==='long';
+  void (async()=>{await recoverCreative(actor,long?'long':'short');
+    if(long)await change(actor,s=>longRest(s));
+  })().catch(err);
+});
 Hooks.on('updateActor',a=>{if(dashboard?.rendered&&a.id===dashboard.actorId)void dashboard.render({force:true}).catch(err);sheetTabs.refreshActor(a);});
 
 Hooks.on('deleteItem',(item,options={},userId)=>{
