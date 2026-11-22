@@ -8,7 +8,7 @@ const SOCKET=`module.${MODULE_ID}`;
 const MIN_DND5E_VERSION='6.0.6';
 const MAX_DND5E_VERSION='6.1.1';
 const compareDnd5eVersions=(a,b)=>{
- const parse=v=>/^\\d+\\.\\d+\\.\\d+$/.test(String(v??''))?String(v).split('.').map(Number):null;
+ const parse=v=>/^\d+\.\d+\.\d+$/.test(String(v??''))?String(v).split('.').map(Number):null;
  const av=parse(a),bv=parse(b);
  if(!av||!bv)return null;
  for(let i=0;i<3;i++)if(av[i]!==bv[i])return Math.sign(av[i]-bv[i]);
