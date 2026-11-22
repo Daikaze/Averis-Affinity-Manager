@@ -1,15 +1,17 @@
 /**
- * In-sheet Affinity tab integration for character and NPC Actors.
- * Supports Tidy 5e's public character/NPC tab APIs and official D&D5e V14
- * sheet navigation without patching D&D5e sheet prototypes.
+ * Affinity sheet integration for Foundry D&D 5e 6.0.6 and Tidy 5e.
  *
- * NPC tabs are GM-only by default; callers provide the permission policy.
+ * Core characters and NPCs get a real in-sheet Affinity tab.
+ * Tidy characters and NPCs use Tidy's tab registration API.
+ * NPCs also get a visible direct-launch control: custom Tidy tab lists and
+ * third-party NPC sheets must not make the Affinity Manager inaccessible.
  */
 export const AFFINITY_TAB_ID="averis-affinity-manager-affinity";
 const installed=new WeakMap();
 const active=new Set();
 let tidyCharacterRegistered=false;
 let tidyNpcRegistered=false;
+let tidyNpcHeaderRegistered=false;
 
 export function registerAffinitySheetTabs({
   hooks=Hooks,
@@ -17,11 +19,20 @@ export function registerAffinitySheetTabs({
   mount,
   isCharacter=a=>a?.documentName==="Actor"&&a?.type==="character",
   isNpc=a=>a?.documentName==="Actor"&&a?.type==="npc",
-  canView=()=>true
+  canView=()=>true,
+  openNpc=()=>{}
 }={}){
   if(typeof mount!=="function")throw Error("Affinity tab needs a mount callback.");
   const resolveActor=app=>app?.actor??app?.document;
   const isSupported=actor=>isCharacter(actor)||isNpc(actor);
+  const resolveRoot=(app,element)=>{
+    const root=app?.element;
+    if(root?.querySelector)return root;
+    if(root?.[0]?.querySelector)return root[0];
+    if(element?.querySelector)return element;
+    if(element?.[0]?.querySelector)return element[0];
+    return null;
+  };
   const mountIn=(app,host)=>{
     const actor=resolveActor(app);
     if(!host||!isSupported(actor)||!canView(actor))return;
@@ -32,7 +43,8 @@ export function registerAffinitySheetTabs({
       installed.set(app,existing);
     }
     const result=mount({app,actor,host,prior:existing});
-    if(result&&typeof result.then==="function")void result.catch(e=>console.error("[Affinity Manager] Tab render error",e));
+    if(result&&typeof result.then==="function")
+      void result.catch(e=>console.error("[Affinity Manager] Tab render error",e));
     active.add(app);
     return existing;
   };
@@ -48,10 +60,42 @@ export function registerAffinitySheetTabs({
     },
     onRender:params=>{
       const host=params?.tabContentsElement?.querySelector?.("[data-aam-inline-host]")
-           ??(params?.tabContentsElement?.matches?.("[data-aam-inline-host]")?params.tabContentsElement:null);
+        ??(params?.tabContentsElement?.matches?.("[data-aam-inline-host]")?params.tabContentsElement:null);
       mountIn(params?.app,host);
     }
   });
+
+  // This NPC button works even if the sheet's available-tabs configuration
+  // excludes the custom Affinity tab, or the sheet lacks native tabs.
+  function ensureNpcLauncher(app,element){
+    const actor=resolveActor(app);
+    if(!isNpc(actor)||!canView(actor)||typeof openNpc!=="function")return false;
+    const root=resolveRoot(app,element);
+    if(!root?.querySelector)return false;
+    if(root.querySelector('[data-aam-npc-open]'))return true;
+    const anchor=root.querySelector('nav.tabs[data-group="primary"]')
+      ??root.querySelector('nav.tabs')
+      ??root.querySelector('.window-header .window-controls')
+      ??root.querySelector('.window-header')
+      ??root.querySelector('.sheet-header');
+    if(!anchor?.append)return false;
+    const button=document.createElement("button");
+    button.type="button";
+    button.dataset.aamNpcOpen="1";
+    button.className="aam-npc-open item control";
+    button.title="Open Affinity Manager for this NPC";
+    button.setAttribute("aria-label","Affinity");
+    button.innerHTML='<i class="fas fa-gem" aria-hidden="true"></i><span>Affinity</span>';
+    button.addEventListener("click",event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+      try{void Promise.resolve(openNpc(actor)).catch(e=>console.error("[Affinity Manager] NPC panel error",e));}
+      catch(e){console.error("[Affinity Manager] NPC panel error",e);}
+    });
+    anchor.append(button);
+    return true;
+  }
 
   const installTidy=api=>{
     if(!api?.models?.HtmlTab)return false;
@@ -66,28 +110,60 @@ export function registerAffinitySheetTabs({
       tidyNpcRegistered=true;
       registered=true;
     }
+    // Tidy's supported header-controls API provides a second fallback in the
+    // window controls, independent of a custom NPC's tab configuration.
+    if(!tidyNpcHeaderRegistered&&typeof api.registerNpcHeaderControls==="function"){
+      api.registerNpcHeaderControls({
+        controls:[{
+          icon:"fas fa-gem",
+          label:"Affinity",
+          visible(){
+            const actor=this?.actor??this?.document;
+            return isNpc(actor)&&canView(actor);
+          },
+          onClickAction(){
+            const actor=this?.actor??this?.document;
+            if(!isNpc(actor)||!canView(actor))return;
+            return openNpc(actor);
+          }
+        }]
+      });
+      tidyNpcHeaderRegistered=true;
+      registered=true;
+    }
     return registered;
   };
   hooks.once("tidy5e-sheet.ready",installTidy);
   hooks.once("ready",()=>{installTidy(getTidyApi());});
 
-  function ensureCoreTab(app){
+  function ensureCoreTab(app,element){
     const actor=resolveActor(app);
     if(!isSupported(actor)||!canView(actor))return;
+    const root=resolveRoot(app,element);
+    if(!root?.querySelector)return;
     const tidy=getTidyApi();
     if(typeof tidy?.isTidy5eSheet==="function"){
-      try{if(tidy.isTidy5eSheet(app))return;}catch{}
+      try{
+        if(tidy.isTidy5eSheet(app)){
+          if(isNpc(actor))ensureNpcLauncher(app,element);
+          return;
+        }
+      }catch{}
     }
-    // Official D&D5e v6.0.6: both Character and NPC sheets use nav.tabs
-    // with data-group="primary", and a .tab-body#tabs container.
-    // NPC sheet uses vertical/right-side icon tabs.
-    const root=app?.element;
-    if(!root?.querySelector)return;
+    if(root.classList?.contains?.("tidy5e-sheet")||root.querySelector(".tidy5e-sheet")){
+      if(isNpc(actor))ensureNpcLauncher(app,element);
+      return;
+    }
+
+    // Official D&D5e 6.0.6 character and NPC sheets share this tab structure.
     const nav=root.querySelector('nav.tabs[data-group="primary"]');
     const body=root.querySelector('.tab-body#tabs, #tabs.tab-body');
-    if(!nav||!body)return;
+    if(!nav||!body){
+      if(isNpc(actor))ensureNpcLauncher(app,element);
+      return;
+    }
     const npc=isNpc(actor);
-    let link=nav.querySelector('[data-aam-tab-link]');
+    let link=nav.querySelector("[data-aam-tab-link]");
     if(!link){
       link=document.createElement("a");
       link.className="item control aam-core-link";
@@ -126,7 +202,6 @@ export function registerAffinitySheetTabs({
       wrapper.hidden=true;
     };
     if(!nav.dataset.aamDelegated){
-      // Capture before D&D5e's own tab handling, without changing its code.
       nav.addEventListener("click",e=>{
         if(e.target.closest("[data-aam-tab-link]")){
           e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
@@ -138,9 +213,16 @@ export function registerAffinitySheetTabs({
     if(app._aamCoreSelected)select();
     else deselect();
   }
+
   hooks.on("renderCharacterActorSheet",ensureCoreTab);
   hooks.on("renderNPCActorSheet",ensureCoreTab);
   hooks.on("renderActorSheetV2",ensureCoreTab);
+  hooks.on("renderActorSheet",ensureCoreTab);
+  hooks.on("renderApplicationV2",ensureCoreTab);
+  hooks.on("tidy5e-sheet.renderActorSheet",(app,element)=>{
+    const actor=resolveActor(app);
+    if(isNpc(actor)&&canView(actor))ensureNpcLauncher(app,element);
+  });
 
   const onClose=app=>{
     installed.get(app)?.dispose?.();
@@ -159,5 +241,5 @@ export function registerAffinitySheetTabs({
         void Promise.resolve(view.refresh()).catch(e=>console.error("[Affinity Manager] Tab refresh error",e));
     }
   };
-  return {installTidy,ensureCoreTab,refreshActor,instances:installed};
+  return {installTidy,ensureCoreTab,ensureNpcLauncher,refreshActor,instances:installed};
 }
