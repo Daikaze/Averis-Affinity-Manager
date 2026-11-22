@@ -74,4 +74,4 @@ jobs:
             echo "Release already exists: $TAG" >&2
             exit 1
           fi
-          gh release create "$TAG" "$ZIP" --title "Averis Affinity Manager v${AAM_VERSION}" --notes "Playtest for Foundry 14.367+ / D&D 5e 6.0.6. 110 granted abilities in 22 affinities, hidden GM progression and DCs, character and NPC Affinity tabs in core and Tidy 5e sheets, plus direct NPC level assignment." --latest
+          gh release create "$TAG" "$ZIP" --title "Averis Affinity Manager v${AAM_VERSION}" --notes "Playtest for Foundry 14.367+ / D&D 5e 6.0.6. 110 granted abilities in 22 affinities, hidden GM progression and DCs, NPC Affinity tabs plus a reliable NPC launch button for custom Tidy or third-party sheets; no Creative Energy; direct NPC level assignment." --latest
