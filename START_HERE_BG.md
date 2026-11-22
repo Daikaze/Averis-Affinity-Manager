@@ -66,3 +66,11 @@
 - GM отваря NPC Sheet → **Affinity** → избира Affinity → **Assign NPC Affinity** → Level 1–5. Способностите се добавят като отделни Features в NPC Actor.
 - NPC Affinity управлението е GM-only и не изисква три проверки за развитие. PC Affinities остават скрити, докато не се отключат.
 - Старите Creative Energy стойности във flags не се изтриват от Actor-ите, но вече не се използват.
+
+## v0.6.1 — Поправка на NPC Affinity бутона
+
+- NPC Sheets вече получават видим бутон **Affinity**, дори когато Tidy има персонализиран списък на табовете и новите табове са скрити.
+- Стандартният D&D5e NPC Sheet запазва собствения Affinity таб. Добавени са и допълнителни render hooks за съвместимост.
+- При Tidy NPC Sheet бутонът до навигацията отваря Affinity Manager за съответния NPC. Интегриран Tidy header control служи като резервен вариант.
+- Ако искаш пълния Affinity таб в Tidy NPC Sheet, включи **Affinity** от конфигурацията на табовете в Tidy.
+- NPC Affinities остават GM-only. Creative Energy и Overload остават премахнати.

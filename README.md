@@ -138,3 +138,11 @@ Fire, Earth, Wind, Water, Lightning, Psychic, Necrotic, Poison, Acid, Ice, Radia
 - **Creative Energy, Energy Cost, Overload** and automatic Creative Energy rest recovery have been removed. The GM can track optional homebrew resource use manually.
 - Granted Affinity spells and Features retain their original use limits. Existing character progression, training and player unlock visibility are preserved.
 - **Migration:** old `flags.averis-affinity-manager.creativeEnergy` values from v0.5.0 are ignored, not deleted from Actors, to avoid destructive changes.
+
+## v0.6.1 — NPC Affinity visibility fix
+
+- Standard D&D5e v6.0.6 NPCs still get a native right-side Affinity tab. Additional render hooks improve compatibility with different sheet classes.
+- Tidy 5e NPCs receive an immediately visible **Affinity** launcher near the sheet navigation, even if their saved custom tab list hides newly registered tabs. The native Tidy custom Affinity tab remains available; an additional Tidy header control provides a backup.
+- Other NPC sheets without compatible tab markup get an Affinity launcher in their sheet/window header, opening the NPC directly in the standalone Affinity Manager.
+- GM-only NPC access is preserved. Creative Energy remains removed. All existing Affinity Features, saved levels, and PC tabs are unchanged.
+- **Tidy tip:** To show the full in-sheet Affinity tab, go to the NPC sheet's Tidy tab configuration and include Affinity. The new launcher also works without editing that setting.
