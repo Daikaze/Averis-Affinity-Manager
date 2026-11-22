@@ -351,7 +351,7 @@ function mountInlineAffinity({app,actor,host,prior}){
  if(isGM())void refreshExistingAffinityIcons(actor);
  return view.render();
 }
-const sheetTabs=registerAffinitySheetTabs({mount:mountInlineAffinity,isCharacter:a=>a?.documentName==='Actor'&&a.type==='character',isNpc:a=>a?.documentName==='Actor'&&a.type==='npc',canView:a=>ownership(a)&&(a.type==='character'||isGM())});
+const sheetTabs=registerAffinitySheetTabs({mount:mountInlineAffinity,isCharacter:a=>a?.documentName==='Actor'&&a.type==='character',isNpc:a=>a?.documentName==='Actor'&&a.type==='npc',canView:a=>ownership(a)&&(a.type==='character'||isGM()),openNpc:actor=>openSafe({actor})});
 
 let dashboard=null;
 async function open({actor=null,affinity=null}={}){
@@ -382,7 +382,7 @@ Hooks.once('init',()=>{
  game.keybindings.register(MODULE_ID,'open',{name:'Open Averis Affinity Manager',editable:[{key:'KeyA',modifiers:['ALT']}],onDown:()=>{void openSafe();return true;},restricted:false});
  game.modules.get(MODULE_ID).api={open,grantAffinity:grant,assignNpcAffinity:assignNpc,removeAffinity:removeKnown,useSelected:activate,syncFeatures:reconcileFeatures,resetUses,getProgress:profile,getCatalog:()=>isGM()?AFFINITIES:AFFINITIES.filter(a=>visibleActors().some(actor=>!!profile(actor).known[a.id]))};
 });
-Hooks.once('ready',()=>{if(game.system?.id!=='dnd5e'||game.system?.version!==SUPPORTED_DND5E_VERSION)warn(`Averis Affinity Manager v0.6.0 targets D&D 5e ${SUPPORTED_DND5E_VERSION} on Foundry V14.`);game.socket?.on(SOCKET,msg=>void handleRequest(msg).catch(err));});
+Hooks.once('ready',()=>{if(game.system?.id!=='dnd5e'||game.system?.version!==SUPPORTED_DND5E_VERSION)warn(`Averis Affinity Manager v0.6.1 targets D&D 5e ${SUPPORTED_DND5E_VERSION} on Foundry V14.`);game.socket?.on(SOCKET,msg=>void handleRequest(msg).catch(err));});
 Hooks.on('updateActor',a=>{if(dashboard?.rendered&&a.id===dashboard.actorId)void dashboard.render({force:true}).catch(err);sheetTabs.refreshActor(a);});
 
 Hooks.on('deleteItem',(item,options={},userId)=>{
