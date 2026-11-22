@@ -44,7 +44,7 @@ test('Use/Share executes ONLY the requested Activity; leaves the other learned F
  assert.equal(progress.usage['fire:1']??0,0); // Unlimited use is tracked as history only.
  assert.equal(progress.history.at(-1).id,'fire');
 });
-test('Cancelled D&D5e 6.0.6 activity does not consume uses or add history',async()=>{
+test('Cancelled D&D5e 5.3.3 activity does not consume uses or add history',async()=>{
  const beforeHistory=progress.history.length;
  const beforeUsage=structuredClone(progress.usage);
  activityUseResult=undefined;

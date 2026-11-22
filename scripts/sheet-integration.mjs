@@ -1,5 +1,5 @@
 /**
- * Affinity sheet integration for Foundry D&D 5e 6.0.6 and Tidy 5e.
+ * Affinity sheet integration for Foundry D&D 5e 5.3.3 and Tidy 5e.
  *
  * Core characters and NPCs get a real in-sheet Affinity tab.
  * Tidy characters and NPCs use Tidy's tab registration API.
@@ -155,7 +155,7 @@ export function registerAffinitySheetTabs({
       return;
     }
 
-    // Official D&D5e 6.0.6 character and NPC sheets share this tab structure.
+    // Official D&D5e 5.3.3 character and NPC sheets share this tab structure.
     const nav=root.querySelector('nav.tabs[data-group="primary"]');
     const body=root.querySelector('.tab-body#tabs, #tabs.tab-body');
     if(!nav||!body){

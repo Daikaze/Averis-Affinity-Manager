@@ -1,3 +1,11 @@
+# Averis Affinity Manager v0.6.2
+
+Foundry 13.347+ (v13) and D&D5e 5.3.3. Install v0.6.2 using the manifest below.
+
+https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/foundry-v13/module.json
+
+---
+
 ## v0.4.0 — Nine new Special Affinities and player unlock visibility
 
 - **22 Affinities:** 12 Normal + 10 Special (Blood, Time, Space, Gravity, Soul, Dream, Void, Chaos, Fate, Metal). Thunder removed.

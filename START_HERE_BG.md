@@ -1,3 +1,11 @@
+# Averis Affinity Manager v0.6.2
+
+За Foundry v13 (13.347+) и D&D 5e 5.3.3. Инсталирай v0.6.2 от Add-on Modules → Install Module → Manifest URL.
+
+https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/foundry-v13/module.json
+
+---
+
 ## v0.4.0 — Special Affinities
 
 - **22 Affinities:** 12 Normal и 10 Special: Blood, Time, Space, Gravity, Soul, Dream, Void, Chaos, Fate, Metal.
