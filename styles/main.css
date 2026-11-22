@@ -460,3 +460,30 @@
 .dnd5e.sheet.actor.npc .aam-core-link>i{font-size:1rem}
 .dnd5e.sheet.actor.npc .aam-core-body{min-width:0;max-width:100%}
 .dnd5e.sheet.actor.npc .aam-embedded{height:clamp(460px,70vh,800px)}
+
+/* v0.6.1: Always-accessible NPC launcher for Tidy/custom NPC sheets. */
+button.aam-npc-open {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  flex:0 0 auto;
+  min-width:32px;
+  min-height:28px;
+  margin:2px;
+  padding:4px 8px;
+  border:1px solid var(--color-border-light-primary,#7777);
+  border-radius:5px;
+  background:var(--color-bg-option,transparent);
+  color:var(--color-text-primary,inherit);
+  font:inherit;
+  font-size:12px;
+  line-height:1.2;
+  cursor:pointer;
+}
+button.aam-npc-open:hover,
+button.aam-npc-open:focus-visible {
+  border-color:var(--color-border-highlight,var(--color-border-light-primary,#999));
+  background:var(--color-bg-btn-minor-inactive,var(--color-bg-option,transparent));
+}
+.dnd5e.sheet.actor.npc nav.tabs[data-group="primary"] button.aam-npc-open span {display:none;}
