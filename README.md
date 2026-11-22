@@ -1,3 +1,5 @@
+**Current Foundry V14 release:** v0.6.2. Use the stable [V14 installation manifest](https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json) to check for updates. The V13 release is maintained separately.
+
 ## v0.4.0 — Nine new Special Affinities and player unlock visibility
 
 - **22 Affinities:** 12 Normal + 10 Special (Blood, Time, Space, Gravity, Soul, Dream, Void, Chaos, Fate, Metal). Thunder removed.
