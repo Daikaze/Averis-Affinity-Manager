@@ -1,4 +1,9 @@
-**Current Foundry V14 release:** v0.6.2. Use the stable [V14 installation manifest](https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json) to check for updates. The V13 release is maintained separately.
+## v0.6.3 — D&D 5e 6.1.1 compatibility
+
+- Foundry V14 (14.367+) with D&D 5e 6.0.6–6.1.1. Compatibility metadata and in-game version checks now accept 6.1.1.
+- Affinity rules, saved actor data, 22 affinities, feature icons, GM-only DCs, and NPC/character tab integration are unchanged. Live testing in Foundry with D&D 5e 6.1.1 is still recommended.
+
+**Current Foundry V14 release:** v0.6.3. Use the stable [V14 installation manifest](https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json) to check for updates. The V13 release is maintained separately.
 
 ## v0.4.0 — Nine new Special Affinities and player unlock visibility
 

@@ -5,7 +5,22 @@ import {syncActorFeatures,getOwnedFeatureIdentity,planAffinityIconUpdates,syncAc
 import {MODULE_ID,DC_BY_LEVEL,CHECKS,MAX_NORMAL,normalizeState,emptyState,grantAffinity,gmSetLevel,gmAssignNpcAffinity,removeAffinity,nextCheck,attemptCheck,useAbility,longRest,maxUses,knownCount,clearTrainingCooldown,suppressFeature,visibleAffinityCatalog} from './engine.mjs';
 
 const SOCKET=`module.${MODULE_ID}`;
-const SUPPORTED_DND5E_VERSION='6.0.6';
+const MIN_DND5E_VERSION='6.0.6';
+const MAX_DND5E_VERSION='6.1.1';
+const compareDnd5eVersions=(a,b)=>{
+ const parse=v=>/^\\d+\\.\\d+\\.\\d+$/.test(String(v??''))?String(v).split('.').map(Number):null;
+ const av=parse(a),bv=parse(b);
+ if(!av||!bv)return null;
+ for(let i=0;i<3;i++)if(av[i]!==bv[i])return Math.sign(av[i]-bv[i]);
+ return 0;
+};
+const supportedDnd5e=()=>{
+ if(game.system?.id!=='dnd5e')return false;
+ const version=game.system.version;
+ const lower=compareDnd5eVersions(version,MIN_DND5E_VERSION);
+ const upper=compareDnd5eVersions(version,MAX_DND5E_VERSION);
+ return lower!==null&&upper!==null&&lower>=0&&upper<=0;
+};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const warn=s=>ui.notifications?.warn?.(s);
 const info=s=>ui.notifications?.info?.(s);
@@ -382,7 +397,7 @@ Hooks.once('init',()=>{
  game.keybindings.register(MODULE_ID,'open',{name:'Open Averis Affinity Manager',editable:[{key:'KeyA',modifiers:['ALT']}],onDown:()=>{void openSafe();return true;},restricted:false});
  game.modules.get(MODULE_ID).api={open,grantAffinity:grant,assignNpcAffinity:assignNpc,removeAffinity:removeKnown,useSelected:activate,syncFeatures:reconcileFeatures,resetUses,getProgress:profile,getCatalog:()=>isGM()?AFFINITIES:AFFINITIES.filter(a=>visibleActors().some(actor=>!!profile(actor).known[a.id]))};
 });
-Hooks.once('ready',()=>{if(game.system?.id!=='dnd5e'||game.system?.version!==SUPPORTED_DND5E_VERSION)warn(`Averis Affinity Manager v0.6.2 targets D&D 5e ${SUPPORTED_DND5E_VERSION} on Foundry V14.`);game.socket?.on(SOCKET,msg=>void handleRequest(msg).catch(err));});
+Hooks.once('ready',()=>{if(!supportedDnd5e())warn(`Averis Affinity Manager v0.6.3 targets D&D 5e ${MIN_DND5E_VERSION}–${MAX_DND5E_VERSION} on Foundry V14.`);game.socket?.on(SOCKET,msg=>void handleRequest(msg).catch(err));});
 Hooks.on('updateActor',a=>{if(dashboard?.rendered&&a.id===dashboard.actorId)void dashboard.render({force:true}).catch(err);sheetTabs.refreshActor(a);});
 
 Hooks.on('deleteItem',(item,options={},userId)=>{
