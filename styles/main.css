@@ -487,3 +487,32 @@ button.aam-npc-open:focus-visible {
   background:var(--color-bg-btn-minor-inactive,var(--color-bg-option,transparent));
 }
 .dnd5e.sheet.actor.npc nav.tabs[data-group="primary"] button.aam-npc-open span {display:none;}
+
+
+/* v0.6.6 — Visible Affinity button on Tidy Classic character and NPC sheets.
+   Do not rely on App V2 header controls or on configurable custom tabs. */
+button.aam-sheet-open {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  flex:0 0 auto;
+  min-height:26px;
+  margin:1px 3px;
+  padding:3px 8px;
+  border:1px solid var(--color-border-light-primary, #7777);
+  border-radius:4px;
+  background:var(--color-bg-option, rgba(125,125,125,.12));
+  color:var(--color-text-primary, inherit);
+  font:inherit;
+  font-size:12px;
+  line-height:1.2;
+  cursor:pointer;
+  pointer-events:auto;
+}
+button.aam-sheet-open:hover, button.aam-sheet-open:focus-visible {
+  border-color:var(--color-border-highlight, #aaa);
+  background:var(--color-bg-btn-minor-inactive, rgba(125,125,125,.23));
+}
+.window-header .window-controls > button.aam-sheet-open {width:auto;max-width:none;}
+

@@ -12,6 +12,7 @@ const active=new Set();
 let tidyCharacterRegistered=false;
 let tidyNpcRegistered=false;
 let tidyNpcHeaderRegistered=false;
+let tidyCharacterHeaderRegistered=false;
 
 export function registerAffinitySheetTabs({
   hooks=Hooks,
@@ -20,7 +21,8 @@ export function registerAffinitySheetTabs({
   isCharacter=a=>a?.documentName==="Actor"&&a?.type==="character",
   isNpc=a=>a?.documentName==="Actor"&&a?.type==="npc",
   canView=()=>true,
-  openNpc=()=>{}
+  openNpc=()=>{},
+  openCharacter=null
 }={}){
   if(typeof mount!=="function")throw Error("Affinity tab needs a mount callback.");
   const resolveActor=app=>app?.actor??app?.document;
@@ -65,37 +67,48 @@ export function registerAffinitySheetTabs({
     }
   });
 
-  // This NPC button works even if the sheet's available-tabs configuration
-  // excludes the custom Affinity tab, or the sheet lacks native tabs.
-  function ensureNpcLauncher(app,element){
+  // Always expose the Affinity launcher on Tidy Classic (legacy App V1)
+  // sheets. Classic does not implement Tidy's V2 header controls, and a
+  // custom tab may be hidden by each user's Tidy tab configuration.
+  function ensureSheetLauncher(app,element){
     const actor=resolveActor(app);
-    if(!isNpc(actor)||!canView(actor)||typeof openNpc!=="function")return false;
+    if(!isSupported(actor)||!canView(actor))return false;
+    const launch=isNpc(actor)?openNpc:(typeof openCharacter==="function"?openCharacter:openNpc);
+    if(typeof launch!=="function")return false;
     const root=resolveRoot(app,element);
     if(!root?.querySelector)return false;
-    if(root.querySelector('[data-aam-npc-open]'))return true;
-    const anchor=root.querySelector('nav.tabs[data-group="primary"]')
-      ??root.querySelector('nav.tabs')
-      ??root.querySelector('.window-header .window-controls')
-      ??root.querySelector('.window-header')
-      ??root.querySelector('.sheet-header');
+    if(root.querySelector("[data-aam-sheet-open]")||root.querySelector("[data-aam-npc-open]"))return true;
+    // A window-header control stays visible even when a Classic sheet has
+    // no extra tab, and it works for both character and NPC sheets.
+    const anchor=root.querySelector(".window-header .window-controls")
+      ??root.querySelector(".window-header .header-actions")
+      ??root.querySelector(".window-header")
+      ??root.querySelector(".sheet-header .header-actions")
+      ??root.querySelector(".sheet-header")
+      ??root.querySelector('nav.tabs[data-group="primary"]')
+      ??root.querySelector("nav.tabs");
     if(!anchor?.append)return false;
     const button=document.createElement("button");
     button.type="button";
-    button.dataset.aamNpcOpen="1";
-    button.className="aam-npc-open item control";
-    button.title="Open Affinity Manager for this NPC";
-    button.setAttribute("aria-label","Affinity");
+    button.dataset.aamSheetOpen="1";
+    if(isNpc(actor))button.dataset.aamNpcOpen="1";
+    else button.dataset.aamCharacterOpen="1";
+    button.className="aam-sheet-open";
+    button.title="Open Affinity Manager for "+actor.name;
+    button.setAttribute("aria-label","Open Affinity Manager");
     button.innerHTML='<i class="fas fa-gem" aria-hidden="true"></i><span>Affinity</span>';
     button.addEventListener("click",event=>{
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
-      try{void Promise.resolve(openNpc(actor)).catch(e=>console.error("[Affinity Manager] NPC panel error",e));}
-      catch(e){console.error("[Affinity Manager] NPC panel error",e);}
+      try{void Promise.resolve(launch(actor)).catch(e=>console.error("[Affinity Manager] Sheet launcher error",e));}
+      catch(e){console.error("[Affinity Manager] Sheet launcher error",e);}
     });
     anchor.append(button);
     return true;
   }
+  const ensureNpcLauncher=(app,element)=>isNpc(resolveActor(app))?ensureSheetLauncher(app,element):false;
+  const ensureClassicLauncher=(app,element)=>ensureSheetLauncher(app,element);
 
   const installTidy=api=>{
     if(!api?.models?.HtmlTab)return false;
@@ -110,24 +123,30 @@ export function registerAffinitySheetTabs({
       tidyNpcRegistered=true;
       registered=true;
     }
-    // Tidy's supported header-controls API provides a second fallback in the
-    // window controls, independent of a custom NPC's tab configuration.
+    // Modern Tidy supports official App V2 header controls. Classic is
+    // App V1 and receives a real DOM button through renderActorSheet.
+    const makeHeaderControl=type=>({
+      icon:"fas fa-gem",
+      label:"Affinity",
+      position:"header",
+      visible(){
+        const actor=resolveActor(this);
+        return (type==="npc"?isNpc(actor):isCharacter(actor))&&canView(actor);
+      },
+      onClickAction(){
+        const actor=resolveActor(this);
+        if(!(type==="npc"?isNpc(actor):isCharacter(actor))||!canView(actor))return;
+        const launch=type==="npc"?openNpc:(typeof openCharacter==="function"?openCharacter:openNpc);
+        return launch(actor);
+      }
+    });
+    if(!tidyCharacterHeaderRegistered&&typeof api.registerCharacterHeaderControls==="function"){
+      api.registerCharacterHeaderControls({controls:[makeHeaderControl("character")]});
+      tidyCharacterHeaderRegistered=true;
+      registered=true;
+    }
     if(!tidyNpcHeaderRegistered&&typeof api.registerNpcHeaderControls==="function"){
-      api.registerNpcHeaderControls({
-        controls:[{
-          icon:"fas fa-gem",
-          label:"Affinity",
-          visible(){
-            const actor=this?.actor??this?.document;
-            return isNpc(actor)&&canView(actor);
-          },
-          onClickAction(){
-            const actor=this?.actor??this?.document;
-            if(!isNpc(actor)||!canView(actor))return;
-            return openNpc(actor);
-          }
-        }]
-      });
+      api.registerNpcHeaderControls({controls:[makeHeaderControl("npc")]});
       tidyNpcHeaderRegistered=true;
       registered=true;
     }
@@ -145,13 +164,14 @@ export function registerAffinitySheetTabs({
     if(typeof tidy?.isTidy5eSheet==="function"){
       try{
         if(tidy.isTidy5eSheet(app)){
-          if(isNpc(actor))ensureNpcLauncher(app,element);
+          ensureClassicLauncher(app,element);
           return;
         }
       }catch{}
     }
-    if(root.classList?.contains?.("tidy5e-sheet")||root.querySelector(".tidy5e-sheet")){
-      if(isNpc(actor))ensureNpcLauncher(app,element);
+    if(["tidy5e-sheet","tidy5e","tidy5e-classic"].some(cls=>root.classList?.contains?.(cls))
+      ||root.querySelector(".tidy5e-sheet, .tidy5e, .tidy5e-classic")){
+      ensureClassicLauncher(app,element);
       return;
     }
 
@@ -159,7 +179,7 @@ export function registerAffinitySheetTabs({
     const nav=root.querySelector('nav.tabs[data-group="primary"]');
     const body=root.querySelector('.tab-body#tabs, #tabs.tab-body');
     if(!nav||!body){
-      if(isNpc(actor))ensureNpcLauncher(app,element);
+      ensureSheetLauncher(app,element);
       return;
     }
     const npc=isNpc(actor);
@@ -219,10 +239,7 @@ export function registerAffinitySheetTabs({
   hooks.on("renderActorSheetV2",ensureCoreTab);
   hooks.on("renderActorSheet",ensureCoreTab);
   hooks.on("renderApplicationV2",ensureCoreTab);
-  hooks.on("tidy5e-sheet.renderActorSheet",(app,element)=>{
-    const actor=resolveActor(app);
-    if(isNpc(actor)&&canView(actor))ensureNpcLauncher(app,element);
-  });
+  hooks.on("tidy5e-sheet.renderActorSheet",ensureClassicLauncher);
 
   const onClose=app=>{
     installed.get(app)?.dispose?.();
@@ -241,5 +258,5 @@ export function registerAffinitySheetTabs({
         void Promise.resolve(view.refresh()).catch(e=>console.error("[Affinity Manager] Tab refresh error",e));
     }
   };
-  return {installTidy,ensureCoreTab,ensureNpcLauncher,refreshActor,instances:installed};
+  return {installTidy,ensureCoreTab,ensureSheetLauncher,ensureNpcLauncher,refreshActor,instances:installed};
 }

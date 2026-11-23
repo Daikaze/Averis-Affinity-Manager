@@ -102,7 +102,10 @@ test("GM-only NPC controls are absent for disallowed viewers and never added to 
     const pc=harness({withTidy:true});
     pc.app.actor=hero;
     pc.handlers.get("renderActorSheetV2")(pc.app);
-    assert.equal(pc.anchor.button,null);
+    assert.ok(pc.anchor.button,"Tidy Classic characters get a visible Affinity launcher");
+    assert.equal(pc.anchor.button.dataset.aamCharacterOpen,"1");
+    pc.anchor.button.click();
+    assert.deepEqual(pc.openCalls,[hero],"button targets the character being edited");
   }finally{restore();}
 });
 

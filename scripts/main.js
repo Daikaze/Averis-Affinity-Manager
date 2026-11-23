@@ -368,7 +368,7 @@ function mountInlineAffinity({app,actor,host,prior}){
  if(isGM())void refreshExistingAffinityIcons(actor);
  return view.render();
 }
-const sheetTabs=registerAffinitySheetTabs({mount:mountInlineAffinity,isCharacter:a=>a?.documentName==='Actor'&&a.type==='character',isNpc:a=>a?.documentName==='Actor'&&a.type==='npc',canView:a=>ownership(a)&&(a.type==='character'||isGM()),openNpc:actor=>openSafe({actor})});
+const sheetTabs=registerAffinitySheetTabs({mount:mountInlineAffinity,isCharacter:a=>a?.documentName==='Actor'&&a.type==='character',isNpc:a=>a?.documentName==='Actor'&&a.type==='npc',canView:a=>ownership(a)&&(a.type==='character'||isGM()),openNpc:actor=>openSafe({actor}),openCharacter:actor=>openSafe({actor})});
 
 let dashboard=null;
 async function open({actor=null,affinity=null}={}){

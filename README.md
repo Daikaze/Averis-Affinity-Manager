@@ -1,3 +1,9 @@
+## v0.6.6 — Visible Tidy Classic Affinity button
+
+- Adds an always-visible **Affinity** launcher to both character and NPC **Tidy Classic** sheets under Foundry V14 / D&D 5e 5.3.3, even if a custom Affinity tab is hidden by Tidy sheet preferences.
+- Adds official Tidy Character/NPC App V2 header controls and a DOM fallback for Classic App V1, preserving the existing Tidy inline tabs and core sheet tabs.
+- The launcher opens the selected Actor's Affinity Manager, checks visibility, prevents duplicated buttons on rerender, and leaves Affinity progress untouched.
+
 ## v0.6.5 — Foundry V14 and D&D5e 5.3.3
 
 - Accepts D&D 5e **5.3.3** on Foundry V14; retains the existing 6.0.6–6.1.1 compatibility path. Other untested intermediary versions are not approved by the runtime guard.
@@ -13,7 +19,7 @@ Corrected the system version parser and added tests for versions 6.0.6, 6.1.0, 6
 - Foundry V14 (14.367+) with D&D 5e 6.0.6–6.1.1. Compatibility metadata and in-game version checks now accept 6.1.1.
 - Affinity rules, saved actor data, 22 affinities, feature icons, GM-only DCs, and NPC/character tab integration are unchanged. Live testing in Foundry with D&D 5e 6.1.1 is still recommended.
 
-**Current Foundry V14 release:** v0.6.5. Use the stable [V14 installation manifest](https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json) to check for updates. The V13 release is maintained separately.
+**Current Foundry V14 release:** v0.6.6. Use the stable [V14 installation manifest](https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json) to check for updates. The V13 release is maintained separately.
 
 ## v0.4.0 — Nine new Special Affinities and player unlock visibility
 
