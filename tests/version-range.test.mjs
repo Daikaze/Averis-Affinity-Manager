@@ -9,14 +9,14 @@ const end = code.indexOf("const esc=", begin);
 assert.ok(begin >= 0 && end > begin, "D&D system version check exists");
 const script = code.slice(begin, end) + "\nglobalThis.checkSupported = supportedDnd5e;";
 
-test("Affinity Manager supports D&D 5e 6.0.6 through 6.1.1 on Foundry V14", () => {
+test("Affinity Manager supports D&D 5e 5.3.3 and 6.0.6 through 6.1.1 on Foundry V14", () => {
   const sandbox = {game: {system: {id: "dnd5e", version: "6.1.1"}}};
   vm.runInNewContext(script, sandbox, {filename: "affinity-compatibility.js"});
-  for (const version of ["6.0.6", "6.1.0", "6.1.1"]) {
+  for (const version of ["5.3.3", "6.0.6", "6.1.0", "6.1.1"]) {
     sandbox.game.system.version = version;
     assert.equal(sandbox.checkSupported(), true, "expected " + version + " supported");
   }
-  for (const version of ["6.0.5", "5.3.3", "6.1.2", "6.2.0", "invalid"]) {
+  for (const version of ["5.3.2", "5.4.0", "6.0.5", "6.1.2", "6.2.0", "invalid"]) {
     sandbox.game.system.version = version;
     assert.equal(sandbox.checkSupported(), false, "expected " + version + " unsupported");
   }

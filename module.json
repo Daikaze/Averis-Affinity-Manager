@@ -1,8 +1,8 @@
 {
   "id": "averis-affinity-manager",
   "title": "Averis Affinity Manager",
-  "description": "Averis Affinity Manager for Foundry V14 / D&D5e 6.0.6: 22 affinities, 110 abilities, and reliable Affinity tabs and buttons on NPC and character sheets.",
-  "version": "0.6.4",
+  "description": "Averis Affinity Manager for Foundry V14 / D&D5e 5.3.3 or 6.0.6–6.1.1: 22 affinities, 110 abilities, NPC/character Affinity tabs and GM-only progression.",
+  "version": "0.6.5",
   "authors": [
     {
       "name": "Averis Campaign"
@@ -19,7 +19,7 @@
         "id": "dnd5e",
         "type": "system",
         "compatibility": {
-          "minimum": "6.0.6",
+          "minimum": "5.3.3",
           "maximum": "6.1.1",
           "verified": "6.1.1"
         }
@@ -35,5 +35,5 @@
   "socket": true,
   "url": "https://github.com/Daikaze/Averis-Affinity-Manager",
   "manifest": "https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json",
-  "download": "https://github.com/Daikaze/Averis-Affinity-Manager/releases/download/affinity-v0.6.4/averis-affinity-manager-v0.6.4.zip"
+  "download": "https://github.com/Daikaze/Averis-Affinity-Manager/releases/download/affinity-v0.6.5/averis-affinity-manager-v0.6.5.zip"
 }
