@@ -8,7 +8,7 @@ const manifest=JSON.parse(readFileSync(new URL("../module.json",import.meta.url)
 test("native V14 Affinity manager defaults and correct system target",()=>{
   assert.match(manifest.version,/^\d+\.\d+\.\d+$/);
   assert.equal(manifest.compatibility.verified,"14");
-  assert.equal(manifest.relationships.systems[0].compatibility.minimum,"6.0.6");
+  assert.equal(manifest.relationships.systems[0].compatibility.minimum,"5.3.3");
   assert.equal(manifest.relationships.systems[0].compatibility.maximum,"6.1.1");
   assert.equal(manifest.relationships.systems[0].compatibility.verified,"6.1.1");
   assert.ok(source.includes("const supportedDnd5e="));
