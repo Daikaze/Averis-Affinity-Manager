@@ -461,58 +461,20 @@
 .dnd5e.sheet.actor.npc .aam-core-body{min-width:0;max-width:100%}
 .dnd5e.sheet.actor.npc .aam-embedded{height:clamp(460px,70vh,800px)}
 
-/* v0.6.1: Always-accessible NPC launcher for Tidy/custom NPC sheets. */
-button.aam-npc-open {
+/* v0.6.7: Tidy Classic Affinity in the main tab strip, not the title bar. */
+.aam-tidy-tab-option {
+  cursor:pointer;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
   flex:0 0 auto;
-  min-width:32px;
-  min-height:28px;
-  margin:2px;
-  padding:4px 8px;
-  border:1px solid var(--color-border-light-primary,#7777);
-  border-radius:5px;
-  background:var(--color-bg-option,transparent);
-  color:var(--color-text-primary,inherit);
-  font:inherit;
-  font-size:12px;
-  line-height:1.2;
-  cursor:pointer;
+  gap:5px;
+  color:inherit;
+  text-decoration:none;
 }
-button.aam-npc-open:hover,
-button.aam-npc-open:focus-visible {
-  border-color:var(--color-border-highlight,var(--color-border-light-primary,#999));
-  background:var(--color-bg-btn-minor-inactive,var(--color-bg-option,transparent));
-}
-.dnd5e.sheet.actor.npc nav.tabs[data-group="primary"] button.aam-npc-open span {display:none;}
-
-
-/* v0.6.6 — Visible Affinity button on Tidy Classic character and NPC sheets.
-   Do not rely on App V2 header controls or on configurable custom tabs. */
-button.aam-sheet-open {
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  flex:0 0 auto;
-  min-height:26px;
-  margin:1px 3px;
-  padding:3px 8px;
-  border:1px solid var(--color-border-light-primary, #7777);
-  border-radius:4px;
-  background:var(--color-bg-option, rgba(125,125,125,.12));
-  color:var(--color-text-primary, inherit);
-  font:inherit;
-  font-size:12px;
-  line-height:1.2;
-  cursor:pointer;
-  pointer-events:auto;
-}
-button.aam-sheet-open:hover, button.aam-sheet-open:focus-visible {
-  border-color:var(--color-border-highlight, #aaa);
-  background:var(--color-bg-btn-minor-inactive, rgba(125,125,125,.23));
-}
-.window-header .window-controls > button.aam-sheet-open {width:auto;max-width:none;}
-
+.aam-tidy-tab-option .tab-title {display:inline;}
+.aam-tidy-tab-option.active {font-weight:700;}
+.aam-tidy-panel[hidden] {display:none!important;}
+.aam-tidy-selected [data-tidy-sheet-part="tab-content"]:not(.aam-tidy-panel) {display:none!important;}
+.aam-tidy-selected .aam-tidy-panel {display:block!important;width:100%;min-width:0;}
+.aam-tidy-panel .aam-embedded {min-height:420px;}

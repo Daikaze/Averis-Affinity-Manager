@@ -11,8 +11,6 @@ const installed=new WeakMap();
 const active=new Set();
 let tidyCharacterRegistered=false;
 let tidyNpcRegistered=false;
-let tidyNpcHeaderRegistered=false;
-let tidyCharacterHeaderRegistered=false;
 
 export function registerAffinitySheetTabs({
   hooks=Hooks,
@@ -67,48 +65,91 @@ export function registerAffinitySheetTabs({
     }
   });
 
-  // Always expose the Affinity launcher on Tidy Classic (legacy App V1)
-  // sheets. Classic does not implement Tidy's V2 header controls, and a
-  // custom tab may be hidden by each user's Tidy tab configuration.
-  function ensureSheetLauncher(app,element){
+  // On Tidy Classic (and any Tidy layout where the custom HtmlTab was
+  // excluded by the user's tab configuration), put Affinity in the actual
+  // Tidy navigation strip. Never add a control to the window title bar.
+  function ensureTidyTab(app,element){
     const actor=resolveActor(app);
     if(!isSupported(actor)||!canView(actor))return false;
-    const launch=isNpc(actor)?openNpc:(typeof openCharacter==="function"?openCharacter:openNpc);
-    if(typeof launch!=="function")return false;
     const root=resolveRoot(app,element);
     if(!root?.querySelector)return false;
-    if(root.querySelector("[data-aam-sheet-open]")||root.querySelector("[data-aam-npc-open]"))return true;
-    // A window-header control stays visible even when a Classic sheet has
-    // no extra tab, and it works for both character and NPC sheets.
-    const anchor=root.querySelector(".window-header .window-controls")
-      ??root.querySelector(".window-header .header-actions")
-      ??root.querySelector(".window-header")
-      ??root.querySelector(".sheet-header .header-actions")
-      ??root.querySelector(".sheet-header")
-      ??root.querySelector('nav.tabs[data-group="primary"]')
-      ??root.querySelector("nav.tabs");
-    if(!anchor?.append)return false;
-    const button=document.createElement("button");
-    button.type="button";
-    button.dataset.aamSheetOpen="1";
-    if(isNpc(actor))button.dataset.aamNpcOpen="1";
-    else button.dataset.aamCharacterOpen="1";
-    button.className="aam-sheet-open";
-    button.title="Open Affinity Manager for "+actor.name;
-    button.setAttribute("aria-label","Open Affinity Manager");
-    button.innerHTML='<i class="fas fa-gem" aria-hidden="true"></i><span>Affinity</span>';
-    button.addEventListener("click",event=>{
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation?.();
-      try{void Promise.resolve(launch(actor)).catch(e=>console.error("[Affinity Manager] Sheet launcher error",e));}
-      catch(e){console.error("[Affinity Manager] Sheet launcher error",e);}
-    });
-    anchor.append(button);
+    const nav=root.querySelector(".tidy-tabs:not(.vertical)")
+      ??root.querySelector(".tidy-tabs[role=tablist]")
+      ??root.querySelector(".tidy-tabs");
+    if(!nav?.querySelector||!nav?.append)return false;
+    // If Tidy's registered custom tab is visible, let its native Svelte
+    // tab-selection and rendering machinery manage it.
+    if(nav.querySelector('[data-tab-id="'+AFFINITY_TAB_ID+'"]:not([data-aam-tidy-tab])'))return true;
+    const nativeContents=root.querySelector('[data-tidy-sheet-part="tab-content"]')
+      ??root.querySelector("[data-tab-contents-for]");
+    const container=nativeContents?.parentElement;
+    if(!container?.append)return false;
+    let link=nav.querySelector("[data-aam-tidy-tab]");
+    if(!link){
+      link=document.createElement("a");
+      link.className="tab-option aam-tidy-tab-option";
+      link.dataset.aamTidyTab="1";
+      link.dataset.tabId=AFFINITY_TAB_ID;
+      link.setAttribute("role","tab");
+      link.setAttribute("aria-label","Affinity");
+      link.setAttribute("aria-selected","false");
+      link.title="Affinity";
+      link.tabIndex=0;
+      link.innerHTML='<i class="tab-icon fas fa-gem" aria-hidden="true"></i><span class="tab-title">Affinity</span>';
+      const feature=Array.from(nav.querySelectorAll?.("[data-tab-id]")??[])
+        .find(el=>/features?/i.test(el.dataset?.tabId??""));
+      if(feature?.after)feature.after(link);
+      else nav.append(link);
+    }
+    let panel=container.querySelector?.("[data-aam-tidy-panel]");
+    if(!panel){
+      panel=document.createElement("div");
+      panel.className="tidy-tab aam-tidy-panel";
+      panel.dataset.aamTidyPanel="1";
+      panel.dataset.tabContentsFor=AFFINITY_TAB_ID;
+      panel.setAttribute("role","tabpanel");
+      panel.innerHTML='<div class="aam-window aam-embedded aam-tidy-host" data-aam-inline-host></div>';
+      container.append(panel);
+    }
+    const select=()=>{
+      app._aamTidySelected=true;
+      root.classList?.add("aam-tidy-selected");
+      link.classList?.add("active");
+      link.setAttribute("aria-selected","true");
+      panel.hidden=false;
+      panel.classList?.add("active");
+      mountIn(app,panel.querySelector?.("[data-aam-inline-host]"));
+    };
+    const deselect=()=>{
+      app._aamTidySelected=false;
+      root.classList?.remove("aam-tidy-selected");
+      link.classList?.remove("active");
+      link.setAttribute("aria-selected","false");
+      panel.hidden=true;
+      panel.classList?.remove("active");
+    };
+    if(!nav.dataset.aamDelegatedAffinity){
+      nav.addEventListener("click",event=>{
+        const target=event.target?.closest?.("[data-aam-tidy-tab]");
+        if(target){
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation?.();
+          select();
+        }else if(event.target?.closest?.("[data-tab-id]"))deselect();
+      },true);
+      nav.addEventListener("keydown",event=>{
+        if(event.key!=="Enter"&&event.key!==" ")return;
+        if(!event.target?.closest?.("[data-aam-tidy-tab]"))return;
+        event.preventDefault();
+        select();
+      });
+      nav.dataset.aamDelegatedAffinity="1";
+    }
+    if(app._aamTidySelected)select();
+    else deselect();
     return true;
   }
-  const ensureNpcLauncher=(app,element)=>isNpc(resolveActor(app))?ensureSheetLauncher(app,element):false;
-  const ensureClassicLauncher=(app,element)=>ensureSheetLauncher(app,element);
 
   const installTidy=api=>{
     if(!api?.models?.HtmlTab)return false;
@@ -123,33 +164,7 @@ export function registerAffinitySheetTabs({
       tidyNpcRegistered=true;
       registered=true;
     }
-    // Modern Tidy supports official App V2 header controls. Classic is
-    // App V1 and receives a real DOM button through renderActorSheet.
-    const makeHeaderControl=type=>({
-      icon:"fas fa-gem",
-      label:"Affinity",
-      position:"header",
-      visible(){
-        const actor=resolveActor(this);
-        return (type==="npc"?isNpc(actor):isCharacter(actor))&&canView(actor);
-      },
-      onClickAction(){
-        const actor=resolveActor(this);
-        if(!(type==="npc"?isNpc(actor):isCharacter(actor))||!canView(actor))return;
-        const launch=type==="npc"?openNpc:(typeof openCharacter==="function"?openCharacter:openNpc);
-        return launch(actor);
-      }
-    });
-    if(!tidyCharacterHeaderRegistered&&typeof api.registerCharacterHeaderControls==="function"){
-      api.registerCharacterHeaderControls({controls:[makeHeaderControl("character")]});
-      tidyCharacterHeaderRegistered=true;
-      registered=true;
-    }
-    if(!tidyNpcHeaderRegistered&&typeof api.registerNpcHeaderControls==="function"){
-      api.registerNpcHeaderControls({controls:[makeHeaderControl("npc")]});
-      tidyNpcHeaderRegistered=true;
-      registered=true;
-    }
+    // No header controls: Affinity belongs to the main sheet tabs.
     return registered;
   };
   hooks.once("tidy5e-sheet.ready",installTidy);
@@ -164,14 +179,14 @@ export function registerAffinitySheetTabs({
     if(typeof tidy?.isTidy5eSheet==="function"){
       try{
         if(tidy.isTidy5eSheet(app)){
-          ensureClassicLauncher(app,element);
+          ensureTidyTab(app,element);
           return;
         }
       }catch{}
     }
     if(["tidy5e-sheet","tidy5e","tidy5e-classic"].some(cls=>root.classList?.contains?.(cls))
       ||root.querySelector(".tidy5e-sheet, .tidy5e, .tidy5e-classic")){
-      ensureClassicLauncher(app,element);
+      ensureTidyTab(app,element);
       return;
     }
 
@@ -179,7 +194,7 @@ export function registerAffinitySheetTabs({
     const nav=root.querySelector('nav.tabs[data-group="primary"]');
     const body=root.querySelector('.tab-body#tabs, #tabs.tab-body');
     if(!nav||!body){
-      ensureSheetLauncher(app,element);
+      ensureTidyTab(app,element);
       return;
     }
     const npc=isNpc(actor);
@@ -239,7 +254,7 @@ export function registerAffinitySheetTabs({
   hooks.on("renderActorSheetV2",ensureCoreTab);
   hooks.on("renderActorSheet",ensureCoreTab);
   hooks.on("renderApplicationV2",ensureCoreTab);
-  hooks.on("tidy5e-sheet.renderActorSheet",ensureClassicLauncher);
+  hooks.on("tidy5e-sheet.renderActorSheet",ensureTidyTab);
 
   const onClose=app=>{
     installed.get(app)?.dispose?.();
@@ -258,5 +273,5 @@ export function registerAffinitySheetTabs({
         void Promise.resolve(view.refresh()).catch(e=>console.error("[Affinity Manager] Tab refresh error",e));
     }
   };
-  return {installTidy,ensureCoreTab,ensureSheetLauncher,ensureNpcLauncher,refreshActor,instances:installed};
+  return {installTidy,ensureCoreTab,ensureTidyTab,refreshActor,instances:installed};
 }
