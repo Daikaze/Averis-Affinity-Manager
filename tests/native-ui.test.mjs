@@ -35,7 +35,9 @@ test("core and Tidy Affinity tab routing and GM-only progression are preserved",
   const integration=readFileSync(new URL("../scripts/sheet-integration.mjs",import.meta.url),"utf8");
   assert.ok(integration.includes("registerCharacterTab"));
   assert.ok(integration.includes("registerNpcTab"));
-  assert.ok(integration.includes("registerNpcHeaderControls"));
+  assert.ok(integration.includes("ensureTidyTab"));
+  assert.ok(integration.includes(".tidy-tabs"));
+  assert.ok(!integration.includes("registerNpcHeaderControls"));
   assert.ok(integration.includes("tidy5e-sheet.renderActorSheet"));
   assert.ok(integration.includes("renderNPCActorSheet"));
   assert.ok(integration.includes("renderActorSheetV2"));
