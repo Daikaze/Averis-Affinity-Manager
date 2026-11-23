@@ -461,19 +461,17 @@
 .dnd5e.sheet.actor.npc .aam-core-body{min-width:0;max-width:100%}
 .dnd5e.sheet.actor.npc .aam-embedded{height:clamp(460px,70vh,800px)}
 
-/* v0.6.7: Tidy Classic Affinity in the main tab strip, not the title bar. */
-.aam-tidy-tab-option {
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  flex:0 0 auto;
-  gap:5px;
-  color:inherit;
-  text-decoration:none;
+/* v0.6.8: Native Tidy tab layout (no custom flex, icon, or button styles).
+   Tidy's .tidy-tabs.actor-tabs > .tab-option owns the typography, spacing,
+   colors, background and native selected/hover indicator. */
+.tidy-tabs .aam-tidy-tab-option { cursor:pointer; }
+/* Hide the stale Svelte-selected tab highlight while the custom panel is open. */
+.aam-tidy-selected .tidy-tabs.actor-tabs > .tab-option.active:not(.aam-tidy-tab-option) {
+  background:transparent;
+  box-shadow:none;
+  text-shadow:none;
+  color:var(--t5e-color-text-lighter,inherit);
 }
-.aam-tidy-tab-option .tab-title {display:inline;}
-.aam-tidy-tab-option.active {font-weight:700;}
 .aam-tidy-panel[hidden] {display:none!important;}
 .aam-tidy-selected [data-tidy-sheet-part="tab-content"]:not(.aam-tidy-panel) {display:none!important;}
 .aam-tidy-selected .aam-tidy-panel {display:block!important;width:100%;min-width:0;}

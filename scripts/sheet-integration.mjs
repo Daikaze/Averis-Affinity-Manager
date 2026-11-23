@@ -85,9 +85,18 @@ export function registerAffinitySheetTabs({
     const container=nativeContents?.parentElement;
     if(!container?.append)return false;
     let link=nav.querySelector("[data-aam-tidy-tab]");
+    const featureTab=Array.from(nav.querySelectorAll?.("[data-tab-id]")??[])
+      .find(el=>/features?/i.test(el.dataset?.tabId??""));
     if(!link){
       link=document.createElement("a");
-      link.className="tab-option aam-tidy-tab-option";
+      // Copy the real Features tab's native Tidy classes rather than applying
+      // a custom flex/button layout. Drop its selected/state-only classes.
+      const nativeClasses=String(featureTab?.className??"tab-option")
+        .split(/\s+/).filter(name=>name&&![
+          "active","first-tab","no-border-on-last-tab","icon-start"
+        ].includes(name));
+      if(!nativeClasses.includes("tab-option"))nativeClasses.unshift("tab-option");
+      link.className=[...nativeClasses,"aam-tidy-tab-option"].join(" ");
       link.dataset.aamTidyTab="1";
       link.dataset.tabId=AFFINITY_TAB_ID;
       link.setAttribute("role","tab");
@@ -95,10 +104,9 @@ export function registerAffinitySheetTabs({
       link.setAttribute("aria-selected","false");
       link.title="Affinity";
       link.tabIndex=0;
-      link.innerHTML='<i class="tab-icon fas fa-gem" aria-hidden="true"></i><span class="tab-title">Affinity</span>';
-      const feature=Array.from(nav.querySelectorAll?.("[data-tab-id]")??[])
-        .find(el=>/features?/i.test(el.dataset?.tabId??""));
-      if(feature?.after)feature.after(link);
+      // Match the text-only native Actions / Features / Effects tabs.
+      link.innerHTML='<span class="tab-title">Affinity</span>';
+      if(featureTab?.after)featureTab.after(link);
       else nav.append(link);
     }
     let panel=container.querySelector?.("[data-aam-tidy-panel]");

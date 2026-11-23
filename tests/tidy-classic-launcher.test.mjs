@@ -10,7 +10,7 @@ function setup(type, allowed=true, nativeAffinity=false){
   const callbacks=new Map(),mounts=[];
   const actor={id:"actor-"+type,documentName:"Actor",type,name:"Test "+type};
   const hooks={on(name,fn){callbacks.set(name,fn);},once(name,fn){callbacks.set("once:"+name,fn);}};
-  const nativeFeature={dataset:{tabId:"features"},classList:cls()};
+  const nativeFeature={dataset:{tabId:"features"},className:"tab-option active icon-start",classList:cls(["active"])};
   const nav={
     dataset:{},children:[nativeFeature],handlers:{},
     querySelector(sel){
@@ -90,7 +90,9 @@ for(const type of ["character","npc"]){
       assert.equal(s.nav.children.length,2);
       const link=s.nav.children[1];
       assert.equal(link.dataset.tabId,AFFINITY_TAB_ID);
-      assert.match(link.innerHTML,/Affinity/);
+      assert.match(link.innerHTML,/^<span class="tab-title">Affinity<\/span>$/);
+      assert.equal(link.className,"tab-option aam-tidy-tab-option","must match native Tidy tab classes without selected/icon flags");
+      assert.doesNotMatch(link.innerHTML,/fa-gem|tab-icon/,"no custom icon when other tabs are text only");
       assert.equal(s.container.children.length,2);
       const panel=s.container.children[1];
       assert.equal(panel.hidden,true);

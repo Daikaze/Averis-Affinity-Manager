@@ -1,8 +1,8 @@
 {
   "id": "averis-affinity-manager",
   "title": "Averis Affinity Manager",
-  "description": "Averis Affinity Manager for Foundry V14 / D&D5e 5.3.3 or 6.x; Affinity as a main Tidy Classic character/NPC tab.",
-  "version": "0.6.7",
+  "description": "Averis Affinity Manager for Foundry V14 and D&D5e 5.3.3/6.x; native-looking Affinity tab in Tidy Classic character and NPC sheets.",
+  "version": "0.6.8",
   "authors": [
     {
       "name": "Averis Campaign"
@@ -35,5 +35,5 @@
   "socket": true,
   "url": "https://github.com/Daikaze/Averis-Affinity-Manager",
   "manifest": "https://raw.githubusercontent.com/Daikaze/Averis-Affinity-Manager/main/module.json",
-  "download": "https://github.com/Daikaze/Averis-Affinity-Manager/releases/download/affinity-v0.6.7/averis-affinity-manager-v0.6.7.zip"
+  "download": "https://github.com/Daikaze/Averis-Affinity-Manager/releases/download/affinity-v0.6.8/averis-affinity-manager-v0.6.8.zip"
 }
